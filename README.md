@@ -6,29 +6,113 @@ Repositorio del proyecto: [ian0000/proyecto-api-final](https://github.com/ian000
 
 **Alcance de esta entrega, 16 de octubre de 2026:** preparación y validación local hasta antes de preparar ambientes AWS, Azure y MongoDB Atlas. No hay URLs públicas verificadas ni recursos de nube provisionados. El estado de las pruebas debe consultarse en [EVIDENCIAS](docs/pruebas/EVIDENCIAS.md) y en [TESTING](docs/TESTING.md); que exista código no demuestra que una prueba haya pasado.
 
-## Ejecutar localmente
+## Ejecutar en desarrollo (DEV)
 
-Requisitos: Node.js >=22.16, npm y Docker con Docker Compose disponible. MongoDB usa el puerto local 27027 y un volumen propio; no necesita Atlas.
+Se ejecuta todo en tu PC: frontend, API, worker y financieras simuladas. Solo MongoDB necesita Docker; no necesitas cuentas de AWS, Azure ni Atlas.
+
+### Requisitos
+
+- Node.js **22.16 o superior**, con npm.
+- Docker Desktop iniciado, con contenedores Linux y Docker Compose disponible.
+- Puertos locales libres: `5173` (web), `4000` (API), `4001` (mocks) y `27027` (MongoDB).
+
+Los comandos siguientes son para **PowerShell**, desde la raíz del repositorio, donde está `package.json`. Si todavía no tienes el código:
 
 ```powershell
+git clone https://github.com/ian0000/proyecto-api-final.git
+cd proyecto-api-final
+```
+
+Si ya tienes el proyecto abierto, usa su carpeta actual; no necesitas clonarlo otra vez.
+
+### Primera ejecución
+
+```powershell
+# 1. Instalar las dependencias de todos los componentes.
 npm ci
-npx tsx scripts/init-local.ts
-docker compose up -d mongo
+
+# 2. Generar la configuración y secretos locales solo si .env no existe.
+if (!(Test-Path -LiteralPath .env)) {
+    npx tsx scripts/init-local.ts
+}
+
+# 3. Iniciar MongoDB y esperar a que esté listo.
+docker compose up -d --wait mongo
+
+# 4. Crear las tres cuentas de demostración si todavía no existen.
 npm run seed
+
+# 5. Iniciar frontend, API, worker y mocks juntos.
 npm run dev
 ```
 
-`init-local.ts` genera `.env` con secretos aleatorios y se niega a sobrescribir uno existente. Lea `DEMO_PASSWORD` directamente en su `.env` local; no lo publique. Los usuarios iniciales son `asesor@demo.test`, `supervisor@demo.test` y `administrador@demo.test`; comparten esa contraseña local. El seed no cambia contraseñas de cuentas existentes. La configuración de referencia está en [.env.example](.env.example).
+Mantén esa terminal abierta mientras pruebas. `npm run dev` inicia los cuatro procesos; no debes levantar cada componente por separado. Vite actualiza el frontend al editarlo. Si modificas backend, worker, mocks o `.env`, detén el comando con **Ctrl+C** y vuelve a ejecutar `npm run dev`.
 
-| Servicio local       | Dirección                          |
-| -------------------- | ---------------------------------- |
-| Web                  | http://localhost:5173              |
-| API                  | http://localhost:4000              |
-| Swagger UI           | http://localhost:4000/docs         |
-| Contrato             | http://localhost:4000/openapi.json |
-| Mocks independientes | http://localhost:4001/health/live  |
+Abre la [aplicación DEV](http://127.0.0.1:5173/).
 
-`npm run dev` inicia API, worker, mocks y Vite. Deténgalos con Ctrl+C; `docker compose stop mongo` conserva la base. `docker compose down` también conserva el volumen salvo que se solicite expresamente eliminarlo. Todos los datos de demostración deben ser ficticios: identificaciones `DEMO-000001`, correos `.test` e importes en USD.
+### Usuarios y contraseña
+
+| Usuario                   | Acceso de demostración                                     |
+| ------------------------- | ---------------------------------------------------------- |
+| `asesor@demo.test`        | Registrar, seguir, comparar ofertas, aceptar y desistir    |
+| `supervisor@demo.test`    | Consultar las solicitudes de su agencia                    |
+| `administrador@demo.test` | Consultar todas las agencias y reactivar trabajos agotados |
+
+**La contraseña no es la palabra `DEMO_PASSWORD`.** Abre el archivo `.env` en tu editor, busca la línea `DEMO_PASSWORD=` y copia únicamente el valor completo que está después del signo `=`. Las tres cuentas iniciales comparten ese valor generado para tu instalación.
+
+En `.env` la contraseña de demostración está en texto plano; MongoDB guarda su hash scrypt con una sal aleatoria. `.env` está excluido de Git y no debes publicarlo. La configuración de referencia, sin secretos reales, está en [.env.example](.env.example).
+
+`npm run seed` conserva las cuentas existentes y **no cambia sus contraseñas**. Modificar `DEMO_PASSWORD` después de haber creado los usuarios no actualiza el hash almacenado. Conserva tu `.env` entre ejecuciones.
+
+### Probar el flujo principal
+
+1. Ingresa como `asesor@demo.test` con la contraseña de tu `.env`.
+2. Abre **Nueva solicitud**; puedes usar los datos ficticios precargados.
+3. Selecciona ambas financieras, deja el escenario **Aprobación** y marca el consentimiento ficticio.
+4. Pulsa **Registrar y enviar solicitud**. El estado se actualiza automáticamente mientras el worker procesa los envíos.
+5. Espera las dos ofertas, compáralas y acepta una. Revisa el historial y la confirmación de comunicación con las financieras.
+6. Para probar errores, crea otra solicitud con **Fallo temporal y recuperación** o **Timeout persistente**. El segundo escenario agota los reintentos y requiere revisión; no debe producir una oferta inmediata.
+
+Usa únicamente información ficticia: identificaciones como `DEMO-000001`, correos `.test` e importes en USD.
+
+### Volver a iniciar y detener
+
+Después de la primera instalación, normalmente solo necesitas:
+
+```powershell
+docker compose up -d --wait mongo
+npm run dev
+```
+
+No hace falta regenerar `.env` ni repetir el seed. Si actualizaste el código y cambió `package-lock.json`, ejecuta `npm ci` antes de iniciar.
+
+Para detener la aplicación, pulsa **Ctrl+C** en la terminal de `npm run dev`. Luego puedes detener MongoDB:
+
+```powershell
+docker compose stop mongo
+```
+
+Esto conserva usuarios, solicitudes y ofertas en el volumen local. No uses `docker compose down -v` para una parada normal: elimina el volumen con los datos de esta instalación.
+
+### Direcciones y diagnóstico rápido
+
+| Servicio local       | Dirección                                          |
+| -------------------- | -------------------------------------------------- |
+| Web                  | [Aplicación](http://127.0.0.1:5173/)               |
+| API lista con Mongo  | [Readiness](http://127.0.0.1:4000/health/ready)    |
+| Swagger UI           | [Probar endpoints](http://127.0.0.1:4000/docs/)    |
+| Contrato             | [OpenAPI JSON](http://127.0.0.1:4000/openapi.json) |
+| Mocks independientes | [Health mocks](http://127.0.0.1:4001/health/live)  |
+
+| Problema                                      | Qué revisar                                                                                                                                                                           |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| No encuentra `.env`                           | Ejecuta el paso de generación desde la raíz del repositorio.                                                                                                                          |
+| `.env already exists; not overwritten`        | Ya tienes configuración. Conserva ese archivo y continúa con MongoDB, seed si faltan cuentas, y DEV.                                                                                  |
+| No conecta a MongoDB                          | Abre Docker Desktop y ejecuta `docker compose up -d --wait mongo`; confirma el estado con `docker compose ps`. La configuración generada usa `127.0.0.1:27027`.                       |
+| Correo o contraseña incorrectos               | Usa una cuenta de la tabla y el valor de `DEMO_PASSWORD`, sin copiar el nombre de la variable. Si cambiaste ese valor después del seed, las cuentas conservan la contraseña anterior. |
+| Puerto ocupado / `EADDRINUSE`                 | Comprueba si ya tienes una ejecución de DEV abierta y detenla desde su terminal antes de iniciar otra.                                                                                |
+| La web abre, pero las solicitudes fallan      | Revisa la terminal de DEV y el endpoint de readiness. API, worker y mocks deben seguir ejecutándose.                                                                                  |
+| Cambiaste backend o `.env` y no ves el efecto | Reinicia `npm run dev`; esos procesos no tienen recarga automática.                                                                                                                   |
 
 ## Documentación y entregables
 
