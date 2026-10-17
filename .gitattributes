@@ -1,0 +1,5 @@
+* text=auto eol=lf
+# Original attachments remain byte-for-byte identical, including line endings.
+docs/fuentes/** -text -diff
+*.docx binary
+*.png binary

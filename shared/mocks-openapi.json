@@ -1,0 +1,470 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Financieras simuladas - Pichincha JSON y Pacífico XML",
+    "version": "1.0.0",
+    "description": "Contratos académicos independientes, sin conexión con bancos reales. Semilla estable por despliegue. Pichincha entrega resultados por webhook HMAC y permite consulta; Pacífico usa XML y polling. X-Mock-Key autentica cada operación excepto liveness. Los escenarios son explícitos y nunca dependen de datos personales reales."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:4001",
+      "description": "Simuladores locales; cambie la URL solo al preparar el ambiente de prueba"
+    }
+  ],
+  "security": [{ "MockKey": [] }],
+  "tags": [
+    { "name": "Pichincha", "description": "JSON y callback HMAC" },
+    { "name": "Pacífico", "description": "XML y consulta periódica" },
+    { "name": "Salud" }
+  ],
+  "paths": {
+    "/health/live": {
+      "get": {
+        "tags": ["Salud"],
+        "operationId": "mockLiveness",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Proceso activo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["status", "academic"],
+                  "properties": {
+                    "status": { "type": "string", "enum": ["ok"] },
+                    "academic": { "type": "boolean", "enum": [true] }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pichincha/applications": {
+      "post": {
+        "tags": ["Pichincha"],
+        "operationId": "submitJsonApplication",
+        "description": "Devuelve 202; el resultado se consulta o se entrega mediante callback. La misma clave con el mismo cuerpo conserva trackingId; un cuerpo distinto produce 409. El callback debe coincidir exactamente con CALLBACK_URL + /v1/webhooks/financieras/pichincha. Los dos primeros intentos del escenario temporal devuelven 503; timeout demora la respuesta y no emite callback.",
+        "parameters": [{ "$ref": "#/components/parameters/PichinchaIdempotency" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/JsonSubmission" },
+              "example": {
+                "applicationId": "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa",
+                "principalCents": 2100000,
+                "downPaymentCents": 900000,
+                "termMonths": 48,
+                "scenario": "aprobada",
+                "callbackUrl": "http://127.0.0.1:4000/v1/webhooks/financieras/pichincha"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Solicitud recibida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["trackingId", "status"],
+                  "properties": {
+                    "trackingId": { "type": "string" },
+                    "status": { "type": "string", "enum": ["received"] }
+                  }
+                },
+                "example": {
+                  "trackingId": "pichincha-11111111-1111-4111-a111-111111111111",
+                  "status": "received"
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Invalid" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "503": { "$ref": "#/components/responses/Temporary" }
+        },
+        "callbacks": {
+          "decision": {
+            "{$request.body#/callbackUrl}": {
+              "post": {
+                "description": "Firma hexadecimal HMAC-SHA256 de timestamp + punto + bytes JSON sin modificar. El timestamp usa milisegundos Unix. La API receptora valida una ventana de 5 minutos; el simulador reintenta después de una respuesta no 2xx. No usa X-Mock-Key: se autentica por HMAC con WEBHOOK_SECRET.",
+                "security": [],
+                "parameters": [
+                  {
+                    "name": "X-Timestamp",
+                    "in": "header",
+                    "required": true,
+                    "schema": { "type": "string", "pattern": "^[0-9]+$" }
+                  },
+                  {
+                    "name": "X-Signature",
+                    "in": "header",
+                    "required": true,
+                    "schema": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+                  },
+                  {
+                    "name": "X-Correlation-ID",
+                    "in": "header",
+                    "required": true,
+                    "schema": { "type": "string", "format": "uuid" }
+                  }
+                ],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": { "schema": { "$ref": "#/components/schemas/BankResult" } }
+                  }
+                },
+                "responses": {
+                  "200": { "description": "Resultado procesado o duplicado reconocido" },
+                  "401": { "description": "Firma o fecha inválida" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pichincha/applications/{id}": {
+      "get": {
+        "tags": ["Pichincha"],
+        "operationId": "pollJsonApplication",
+        "parameters": [{ "$ref": "#/components/parameters/TrackingId" }],
+        "responses": {
+          "200": {
+            "description": "Resultado canónico listo",
+            "content": {
+              "application/json": { "schema": { "$ref": "#/components/schemas/BankResult" } }
+            }
+          },
+          "202": { "$ref": "#/components/responses/Pending" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/Missing" }
+        }
+      }
+    },
+    "/pichincha/applications/{id}/decision": {
+      "post": {
+        "tags": ["Pichincha"],
+        "operationId": "notifyJsonDecision",
+        "parameters": [{ "$ref": "#/components/parameters/TrackingId" }],
+        "requestBody": { "$ref": "#/components/requestBodies/Decision" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Notified" },
+          "400": { "$ref": "#/components/responses/Invalid" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/pacifico/tramites": {
+      "post": {
+        "tags": ["Pacífico"],
+        "operationId": "submitXmlApplication",
+        "description": "Solicitud XML con raíz Solicitud. La consulta GET es polling; no se emiten callbacks. Idempotency-Key = applicationId + -pacifico. Las notificaciones de decisión usan JSON aunque el envío y resultado usan XML. Se rechazan declaraciones y entidades XML.",
+        "parameters": [{ "$ref": "#/components/parameters/PacificoIdempotency" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/xml": {
+              "schema": { "$ref": "#/components/schemas/XmlSubmission" },
+              "example": "<Solicitud><applicationId>aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa</applicationId><principalCents>2100000</principalCents><downPaymentCents>900000</downPaymentCents><termMonths>48</termMonths><scenario>aprobada</scenario></Solicitud>"
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Trámite recibido",
+            "content": {
+              "application/xml": {
+                "schema": {
+                  "type": "object",
+                  "xml": { "name": "Respuesta" },
+                  "required": ["tramite", "estado"],
+                  "properties": {
+                    "tramite": { "type": "string" },
+                    "estado": { "type": "string", "enum": ["recibida"] }
+                  }
+                },
+                "example": "<Respuesta><tramite>pacifico-11111111-1111-4111-a111-111111111111</tramite><estado>recibida</estado></Respuesta>"
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Invalid" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "503": { "$ref": "#/components/responses/Temporary" }
+        }
+      }
+    },
+    "/pacifico/tramites/{id}": {
+      "get": {
+        "tags": ["Pacífico"],
+        "operationId": "pollXmlApplication",
+        "parameters": [{ "$ref": "#/components/parameters/TrackingId" }],
+        "responses": {
+          "200": {
+            "description": "XML con resultado canónico serializado como cadena JSON en resultado",
+            "content": {
+              "application/xml": {
+                "schema": {
+                  "type": "object",
+                  "xml": { "name": "Respuesta" },
+                  "required": ["tramite", "resultado"],
+                  "properties": {
+                    "tramite": { "type": "string" },
+                    "resultado": {
+                      "type": "string",
+                      "description": "JSON que cumple BankResult; el adaptador valida y convierte este campo"
+                    }
+                  }
+                },
+                "example": "<Respuesta><tramite>pacifico-demo</tramite><resultado>{&quot;eventId&quot;:&quot;11111111-1111-4111-a111-111111111111&quot;,&quot;applicationId&quot;:&quot;aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa&quot;,&quot;bank&quot;:&quot;pacifico&quot;,&quot;externalId&quot;:&quot;pacifico-demo&quot;,&quot;decision&quot;:&quot;RECHAZADA&quot;}</resultado></Respuesta>"
+              }
+            }
+          },
+          "202": { "$ref": "#/components/responses/Pending" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/Missing" }
+        }
+      }
+    },
+    "/pacifico/tramites/{id}/decision": {
+      "post": {
+        "tags": ["Pacífico"],
+        "operationId": "notifyXmlBankDecision",
+        "parameters": [{ "$ref": "#/components/parameters/TrackingId" }],
+        "requestBody": { "$ref": "#/components/requestBodies/Decision" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/Notified" },
+          "400": { "$ref": "#/components/responses/Invalid" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "MockKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Mock-Key",
+        "description": "Secreto compartido del sandbox, configurado mediante MOCK_SECRET; nunca usar credenciales bancarias reales"
+      }
+    },
+    "parameters": {
+      "TrackingId": {
+        "in": "path",
+        "name": "id",
+        "required": true,
+        "schema": { "type": "string" },
+        "description": "TrackingId/tramite recibido al enviar la solicitud"
+      },
+      "PichinchaIdempotency": {
+        "in": "header",
+        "name": "Idempotency-Key",
+        "required": true,
+        "schema": { "type": "string", "pattern": "^[a-f0-9-]{36}-pichincha$" },
+        "example": "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa-pichincha"
+      },
+      "PacificoIdempotency": {
+        "in": "header",
+        "name": "Idempotency-Key",
+        "required": true,
+        "schema": { "type": "string", "pattern": "^[a-f0-9-]{36}-pacifico$" },
+        "example": "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa-pacifico"
+      }
+    },
+    "schemas": {
+      "Submission": {
+        "type": "object",
+        "required": [
+          "applicationId",
+          "principalCents",
+          "downPaymentCents",
+          "termMonths",
+          "scenario"
+        ],
+        "properties": {
+          "applicationId": { "type": "string", "format": "uuid" },
+          "principalCents": { "type": "integer", "minimum": 1, "maximum": 20000000 },
+          "downPaymentCents": { "type": "integer", "minimum": 0 },
+          "termMonths": { "type": "integer", "enum": [12, 24, 36, 48, 60, 72] },
+          "scenario": {
+            "type": "string",
+            "enum": [
+              "aprobada",
+              "condiciones",
+              "rechazada",
+              "informacion",
+              "demora",
+              "temporal",
+              "timeout"
+            ]
+          }
+        }
+      },
+      "JsonSubmission": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Submission" },
+          {
+            "type": "object",
+            "required": ["callbackUrl"],
+            "properties": {
+              "callbackUrl": {
+                "type": "string",
+                "format": "uri",
+                "description": "Exactamente CALLBACK_URL + /v1/webhooks/financieras/pichincha; se rechazan todos los demás destinos"
+              }
+            }
+          }
+        ]
+      },
+      "XmlSubmission": {
+        "allOf": [{ "$ref": "#/components/schemas/Submission" }],
+        "xml": { "name": "Solicitud" }
+      },
+      "Offer": {
+        "type": "object",
+        "required": [
+          "id",
+          "bank",
+          "annualRate",
+          "termMonths",
+          "installmentCents",
+          "downPaymentCents",
+          "insuranceCents",
+          "conditions"
+        ],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "bank": { "type": "string", "enum": ["pichincha", "pacifico"] },
+          "annualRate": { "type": "number", "minimum": 0 },
+          "termMonths": { "type": "integer", "enum": [12, 24, 36, 48, 60, 72] },
+          "installmentCents": { "type": "integer", "minimum": 1 },
+          "downPaymentCents": { "type": "integer", "minimum": 0 },
+          "insuranceCents": { "type": "integer", "minimum": 0 },
+          "conditions": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "BankResult": {
+        "type": "object",
+        "required": ["eventId", "applicationId", "bank", "externalId", "decision"],
+        "properties": {
+          "eventId": { "type": "string", "format": "uuid" },
+          "applicationId": { "type": "string", "format": "uuid" },
+          "bank": { "type": "string", "enum": ["pichincha", "pacifico"] },
+          "externalId": { "type": "string" },
+          "decision": {
+            "type": "string",
+            "enum": ["APROBADA", "CONDICIONES", "RECHAZADA", "INFORMACION"]
+          },
+          "offer": { "$ref": "#/components/schemas/Offer" }
+        },
+        "description": "APROBADA y CONDICIONES incluyen offer; RECHAZADA e INFORMACION no incluyen offer. IDs y tasa reproducibles con MOCK_SEED y applicationId."
+      },
+      "Error": {
+        "type": "object",
+        "required": ["error"],
+        "properties": { "error": { "type": "string" } }
+      },
+      "Decision": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action"],
+        "properties": { "action": { "type": "string", "enum": ["accepted", "withdrawn"] } }
+      }
+    },
+    "requestBodies": {
+      "Decision": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Decision" },
+            "example": { "action": "accepted" }
+          }
+        }
+      }
+    },
+    "responses": {
+      "Invalid": {
+        "description": "Cuerpo, callback o idempotencia inválidos",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": { "error": "Invalid fictitious submission" }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "X-Mock-Key ausente o incorrecta",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": { "error": "Unauthorized" }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Cambio de cuerpo bajo una misma clave, trámite ausente o decisión contradictoria",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": { "error": "Idempotency conflict" }
+          }
+        }
+      },
+      "Temporary": {
+        "description": "Fallo temporal simulado; reintente usando la misma clave",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": { "error": "Simulated temporary failure" }
+          }
+        }
+      },
+      "Missing": {
+        "description": "Trámite no encontrado",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/Error" },
+            "example": { "error": "Not found" }
+          }
+        }
+      },
+      "Pending": {
+        "description": "Todavía en análisis; JSON incluso en la consulta a Pacífico",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["status"],
+              "properties": { "status": { "type": "string", "enum": ["analysis"] } }
+            },
+            "example": { "status": "analysis" }
+          }
+        }
+      },
+      "Notified": {
+        "description": "Decisión registrada; repetir la misma decisión es idempotente",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["accepted"],
+              "properties": { "accepted": { "type": "boolean", "enum": [true] } }
+            },
+            "example": { "accepted": true }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+name: proyecto-api-final
+services:
+  mongo:
+    image: mongo:8.0
+    ports: ['127.0.0.1:27027:27017']
+    volumes: ['credito-mongo:/data/db']
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+volumes:
+  credito-mongo:

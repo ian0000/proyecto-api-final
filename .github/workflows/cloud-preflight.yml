@@ -1,0 +1,51 @@
+name: Cloud preflight (no deployment)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  config:
+    if: vars.CLOUD_PREPARATION_APPROVED == 'true'
+    environment: cloud-preflight
+    runs-on: ubuntu-latest
+    env:
+      API_ORIGIN: ${{ vars.API_ORIGIN }}
+      MOCK_ORIGIN: ${{ vars.MOCK_ORIGIN }}
+      FRONTEND_ORIGIN: ${{ vars.FRONTEND_ORIGIN }}
+    steps:
+      - name: Validate future origins without contacting providers
+        run: |
+          node --input-type=module - <<'NODE'
+          for (const key of ['API_ORIGIN','MOCK_ORIGIN','FRONTEND_ORIGIN']) {
+            const url = new URL(process.env[key]);
+            if (url.protocol !== 'https:' || url.username || url.password || url.pathname !== '/' || url.search || url.hash || url.hostname.endsWith('.invalid')) throw new Error(`${key}: expected HTTPS origin`);
+          }
+          console.log('Configuration syntax valid. No cloud deployment was performed.');
+          NODE
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run build
+        env:
+          VITE_API_URL: ${{ vars.API_ORIGIN }}
+      - name: Bind web CSP to the validated API origin in the generated artifact
+        run: |
+          node --input-type=module - <<'NODE'
+          import {readFileSync,writeFileSync} from 'node:fs';
+          const path='frontend/dist/staticwebapp.config.json';
+          const config=JSON.parse(readFileSync(path,'utf8'));
+          const csp=config.globalHeaders['Content-Security-Policy'];
+          if (!csp.includes('https://REPLACE_WITH_AWS_API_HOST')) throw new Error('Expected CSP template marker missing; review frontend policy');
+          config.globalHeaders['Content-Security-Policy']=csp.replace('https://REPLACE_WITH_AWS_API_HOST',process.env.API_ORIGIN);
+          const output=JSON.stringify(config,null,2);
+          if (output.includes('REPLACE_WITH')) throw new Error('Unresolved cloud configuration marker');
+          writeFileSync(path,output+'\n');
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cloud-review-build
+          path: |
+            backend/dist
+            mocks/dist
+            frontend/dist

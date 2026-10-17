@@ -1,0 +1,68 @@
+# Requisitos, trazabilidad y diferencias
+
+Fecha de corte documental: **16 de octubre de 2026**. Esta matriz describe el alcance visible en código; no sustituye resultados de pruebas. **Completo** significa que el flujo acotado está implementado; **Parcial** conserva brechas del requisito original; **Simulado** depende de contratos y decisiones académicas ficticias; **Pendiente** carece de implementación. Una función completa todavía requiere su validación en [TESTING](TESTING.md).
+
+## Resolución de inconsistencias
+
+| Fuente original                                                                          | Decisión actual y motivo                                                                                                                                  |
+| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Guayaquil, Originarsa y BPAC; fase1 interpreta BPAC como Pichincha, RF/RNF como Pacífico | Exactamente dos mocks: Banco Pichincha y Banco del Pacífico, por decisión explícita del prompt. No inferir identidades ni APIs reales a partir de BPAC.   |
+| NestJS, PostgreSQL 16, Redis/BullMQ, Kong, Render                                        | React/Vite, Fastify/Node/TS y MongoDB; cola embebida persistente. AWS backend, Azure frontend y Atlas son destino futuro, fuera de la preparación actual. |
+| OAuth/OIDC, RS256 y JWKS                                                                 | JWT propio HS256 con issuer/audience y vencimiento. OAuth/OIDC no implementados; simplificación explícita del alcance académico.                          |
+| Cobertura mínima 70 % en RNF-17                                                          | Rúbrica exige >80 %; objetivo interno >=85 % en las cuatro métricas backend. Solo el reporte ejecutado acredita cumplimiento.                             |
+| p95 500 ms del diagrama                                                                  | RNF-08 exige <2 s en registro/consulta; 500 ms es ideal síncrono de la rúbrica. Envío confirma 202 sin esperar decisión del mock.                         |
+| JSON con decimales USD                                                                   | JSON usa centavos enteros USD; evita errores binarios de cálculo. La UI presenta dos decimales.                                                           |
+| Bitácora inmutable por trigger relacional                                                | Eventos embebidos y anexados por aplicación; no hay inmutabilidad criptográfica ni protección contra administrador de base.                               |
+| Fase2 afirma patrones implementados/probados                                             | Esa afirmación histórica no se hereda: ver código actual y evidencias locales.                                                                            |
+
+## Requisitos funcionales
+
+| ID    | Requisito original                                                      | Estado    | Implementación y brecha                                                                                                                                   |
+| ----- | ----------------------------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RF-01 | Registrar cliente natural/jurídico, cónyuge/garante, vehículo y crédito | Parcial   | Formulario y modelo cliente/vehículo/financiamiento; no persona jurídica, cónyuge/garante ni tipo de crédito. `shared/domain.ts`, `frontend/src/App.tsx`. |
+| RF-02 | Validar cédula/RUC, campos, rangos y contacto                           | Parcial   | OpenAPI valida campos, email e IDs DEMO; entrada >=20 %, plazo 12–72 cada 12. Sin dígito verificador real, teléfono ni reglas propias por entidad.        |
+| RF-03 | Carga de documentos                                                     | Pendiente | No existe upload, gestor, validación de tipo/tamaño ni almacenamiento documental.                                                                         |
+| RF-04 | Consentimiento con fecha, canal y evidencia; impedir envío sin él       | Completo  | `consent`, `consentAt` y validación antes del insert; evidencia textual ficticia, no firma legal.                                                         |
+| RF-05 | Selección y elegibilidad de financieras                                 | Parcial   | Selección de una o ambas; validación financiera común. Reglas por perfil/tipo de vehículo pendientes.                                                     |
+| RF-06 | Envío único y adaptación                                                | Simulado  | POST `/v1/solicitudes` crea y encola; adapters JSON/XML y mocks separados.                                                                                |
+| RF-07 | ID interno y trámite por financiera                                     | Completo  | UUID de solicitud y `externalId` por submission.                                                                                                          |
+| RF-08 | Estado consolidado y por financiera                                     | Completo  | Detalle, `/respuestas` y seguimiento web.                                                                                                                 |
+| RF-09 | Webhook o polling                                                       | Simulado  | Pichincha webhook HMAC con polling de respaldo; Pacífico XML/polling.                                                                                     |
+| RF-10 | Complementar información en misma solicitud                             | Parcial   | Se representa decisión INFORMACION; no formulario/endpoint para complementar o reanudar.                                                                  |
+| RF-11 | Comparar tasa, plazo, cuota, entrada, seguros y condiciones             | Simulado  | Ofertas ficticias lado a lado y `/ofertas`, todos esos campos.                                                                                            |
+| RF-12 | Aceptar y notificar elegida/desistimiento a otras                       | Simulado  | CAS de aceptación y jobs `notify`; recepción en mocks. No notificación bancaria real.                                                                     |
+| RF-13 | Aprobación supervisor/analista por excepciones                          | Pendiente | Supervisor solo consulta; no reglas de aprobación ni rol analista.                                                                                        |
+| RF-14 | Email/push de estado, requerimientos y vencimientos                     | Pendiente | UI consulta estado; no entrega de correo o push.                                                                                                          |
+| RF-15 | Historial actor, acción, momento y canal                                | Parcial   | Timeline con actor, acción, fecha y correlation ID; canal de cada evento no modelado.                                                                     |
+| RF-16 | Desistir y expirar automáticamente                                      | Parcial   | Desistimiento y notificación simulada; sin expiración automática por N días.                                                                              |
+| RF-17 | Configuración runtime financieras/credenciales/reglas/documentos        | Pendiente | Dos adaptadores fijos y variables de entorno; no CRUD de configuración runtime.                                                                           |
+| RF-18 | Administrar usuarios por concesionario/agencia y cuatro roles           | Parcial   | Usuarios seed y roles asesor/supervisor/administrador con agencia; sin CRUD, concesionario ni analista.                                                   |
+| RF-19 | Reportes por dimensiones, aprobación, tiempos y colocación              | Parcial   | Totales filtrados y contadores de página; métricas técnicas admin. Sin reportes avanzados/exportación ni colocación formal.                               |
+| RF-20 | Sincronización CRM/ERP y facturación                                    | Pendiente | Sin conector externo ni facturación.                                                                                                                      |
+
+## Requisitos no funcionales
+
+| ID     | Requisito original                                   | Estado    | Implementación y brecha                                                                                                                        |
+| ------ | ---------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| RNF-01 | OpenAPI 3.x, API-First, `/v1`                        | Completo  | `shared/openapi.json`, schemas consumidos por rutas, Swagger UI y validador. Resultados de coherencia en pruebas.                              |
+| RNF-02 | Gateway, Adapter y modelo canónico                   | Parcial   | Fastify como entrada y adaptadores; gateway independiente no necesario localmente. Capas del borde cloud pendientes.                           |
+| RNF-03 | OAuth/OIDC y almacén de secretos                     | Parcial   | JWT HS256 propio, scrypt y `.env` local; sin OAuth/OIDC ni secret manager cloud.                                                               |
+| RNF-04 | TLS, cifrado en reposo y logs protegidos             | Parcial   | Redacción de auth/cookie/firma; solo ficticios. HTTP y Mongo local; TLS/cifrado/gestión de claves cloud sin verificar.                         |
+| RNF-05 | Roles y alcance por agencia                          | Completo  | Filtro por agencia; administrador global; supervisor lectura. No equivale a flujo aprobación RF-13.                                            |
+| RNF-06 | Cumplimiento LOPDP integral                          | Parcial   | Consentimiento y finalidad académica; retención, derechos, eliminación y revisión jurídica pendientes. No se declara certificación legal.      |
+| RNF-07 | 99,5 % y aislar caída de financiera                  | Parcial   | Circuito y jobs por financiera; SLA mensual requiere operación y monitoreo prolongados.                                                        |
+| RNF-08 | p95 <2 s y envío asíncrono 202                       | Parcial   | 202 y worker persistente implementados; p95 requiere medición.                                                                                 |
+| RNF-09 | Backoff, circuit breaker, timeout y DLQ              | Completo  | Worker con leases, 5 intentos configurables, backoff, estado dead y reactivación admin. Pruebas de recuperación necesarias.                    |
+| RNF-10 | Idempotencia de POST                                 | Parcial   | Crear, aceptar y desistir idempotentes; reactivación admin no tiene replay por clave. Mocks deduplican submissions y decisiones.               |
+| RNF-11 | Escalamiento horizontal ante picos                   | Parcial   | Lease/CAS permite reclamar entre workers; escalamiento y capacidad multirréplica no medidos.                                                   |
+| RNF-12 | Correlación, logs, métricas por financiera y alertas | Parcial   | Correlation ID, logs estructurados y métricas proceso/cola; sin series por financiera ni alertas.                                              |
+| RNF-13 | Auditoría inmutable y retención                      | Parcial   | Eventos anexados sin rutas de edición; acceso admin DB puede alterarlos. Retención/inmutabilidad pendientes.                                   |
+| RNF-14 | JSON, Problem Details, ISO 8601, USD                 | Completo  | JSON canónico, `application/problem+json`, UTC y centavos USD en contrato. XML solo tras adaptador.                                            |
+| RNF-15 | Nueva financiera sin cambiar contrato público        | Parcial   | Interfaz Adapter desacopla protocolo; enum de bancos y registros requieren cambios de código/esquema compatibles. No es plug-and-play runtime. |
+| RNF-16 | Rate limit por consumidor y financiera               | Parcial   | Por usuario/IP en API y login; estado del limitador local al proceso. Sin cupos por proveedor ni coordinación distribuida.                     |
+| RNF-17 | Tests, cobertura, CI/CD y ambientes separados        | Parcial   | Objetivo 85 %, scripts y pipeline preparado; ejecución/resultados deben acreditarse. Ambientes cloud fuera del alcance actual.                 |
+| RNF-18 | Responsive y registro <=5 min                        | Parcial   | UI adaptable y mensajes comprensibles; cronometraje y evaluación usuarios pendientes.                                                          |
+| RNF-19 | Portal navegable, ejemplos, sandbox y onboarding     | Parcial   | Swagger UI, ejemplo y mocks locales; sin portal público ni autoservicio para socios. Ver guía Adapter en arquitectura.                         |
+| RNF-20 | Backup diario, RPO <=24 h, RTO <=4 h                 | Pendiente | Volumen local persistente no es respaldo. Falta política, backup/restauración y ejercicio medido.                                              |
+
+Los requisitos parciales y pendientes se mantienen en [BACKLOG](BACKLOG.md). Las fuentes intactas y sus SHA-256 están en [manifest.json](fuentes/manifest.json).

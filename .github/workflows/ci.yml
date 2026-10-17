@@ -1,0 +1,167 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.paths.outputs.backend }}
+      frontend: ${{ steps.paths.outputs.frontend }}
+      mocks: ${{ steps.paths.outputs.mocks }}
+      contract: ${{ steps.paths.outputs.contract }}
+      security: ${{ steps.paths.outputs.security }}
+      e2e: ${{ steps.paths.outputs.e2e }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts
+      - id: paths
+        shell: bash
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.sha }}
+        run: |
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            node --import tsx scripts/affected.ts --paths package.json
+          else
+            node --import tsx scripts/affected.ts "$BASE" "$HEAD"
+          fi
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci --ignore-scripts
+      - run: npm run docs:check
+  backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:8.0
+        ports: ['27027:27017']
+        options: --health-cmd "mongosh --quiet --eval 'db.adminCommand({ping:1})'" --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      TEST_MONGODB_URI: mongodb://127.0.0.1:27027
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm exec eslint -- backend shared scripts mocks --max-warnings 0
+      - run: npm run typecheck --workspace backend
+      - run: npm run build --workspace backend
+      - run: npm run test --workspace backend
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-coverage
+          path: backend/coverage-unit
+          if-no-files-found: warn
+  mocks:
+    needs: changes
+    if: needs.changes.outputs.mocks == 'true'
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:8.0
+        ports: ['27027:27017']
+        options: --health-cmd "mongosh --quiet --eval 'db.adminCommand({ping:1})'" --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      TEST_MONGODB_URI: mongodb://127.0.0.1:27027
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm exec eslint -- mocks shared --max-warnings 0
+      - run: npm run typecheck --workspace mocks
+      - run: npm run build --workspace mocks
+      - run: npm run test --workspace mocks
+  frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm exec eslint -- frontend shared --max-warnings 0
+      - run: npm run typecheck --workspace frontend
+      - run: npm run build --workspace frontend
+      - run: npm run test --workspace frontend
+  contract:
+    needs: changes
+    if: needs.changes.outputs.contract == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm exec tsc -- --noEmit
+      - run: npm run contract
+  security:
+    needs: changes
+    if: needs.changes.outputs.security == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci --ignore-scripts
+      - run: npm audit --audit-level=high
+  e2e:
+    needs: [changes, backend, frontend, mocks, contract]
+    if: always() && needs.changes.outputs.e2e == 'true' && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled')
+    runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:8.0
+        ports: ['27027:27017']
+        options: --health-cmd "mongosh --quiet --eval 'db.adminCommand({ping:1})'" --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      TEST_MONGODB_URI: mongodb://127.0.0.1:27027
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm exec eslint -- tests playwright.config.ts --max-warnings 0
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-report
+          path: |
+            playwright-report
+            test-results
+            artifacts/e2e
+          if-no-files-found: warn
+  required:
+    name: Required checks
+    if: always()
+    needs: [changes, docs, backend, frontend, mocks, contract, security, e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Reject any failed or cancelled dependency
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          node -e 'const jobs=JSON.parse(process.env.RESULTS);if(Object.values(jobs).some(job=>["failure","cancelled"].includes(job.result)))process.exit(1)'

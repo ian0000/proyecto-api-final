@@ -1,0 +1,1552 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Fábrica de Crédito Vehicular — sandbox académico",
+    "version": "1.0.0",
+    "description": "Datos exclusivamente ficticios. JWT propio; no OAuth. Importes enteros en centavos USD. Las financieras son simulaciones sin relación con sus APIs reales. No existen URLs de nube verificadas."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4000",
+      "description": "Local"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Sistema"
+    },
+    {
+      "name": "Acceso"
+    },
+    {
+      "name": "Financieras"
+    },
+    {
+      "name": "Solicitudes"
+    },
+    {
+      "name": "Integraciones"
+    },
+    {
+      "name": "Administración"
+    }
+  ],
+  "paths": {
+    "/health/live": {
+      "get": {
+        "operationId": "Liveness",
+        "summary": "Liveness",
+        "tags": ["Sistema"],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error normalizado; 400 validación, 401 autenticación, 403 rol, 404 alcance, 409 conflicto, 412 versión, 413 tamaño, 415 formato, 422 regla, 429 límite, 503 dependencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "operationId": "Readiness",
+        "summary": "Readiness",
+        "tags": ["Sistema"],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error normalizado; 400 validación, 401 autenticación, 403 rol, 404 alcance, 409 conflicto, 412 versión, 413 tamaño, 415 formato, 422 regla, 429 límite, 503 dependencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/login": {
+      "post": {
+        "operationId": "IniciarSesion",
+        "summary": "IniciarSesion",
+        "tags": ["Acceso"],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error normalizado; 400 validación, 401 autenticación, 403 rol, 404 alcance, 409 conflicto, 412 versión, 413 tamaño, 415 formato, 422 regla, 429 límite, 503 dependencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Login"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/me": {
+      "get": {
+        "operationId": "ConsultarSesion",
+        "summary": "ConsultarSesion",
+        "tags": ["Acceso"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Actor"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error normalizado; 400 validación, 401 autenticación, 403 rol, 404 alcance, 409 conflicto, 412 versión, 413 tamaño, 415 formato, 422 regla, 429 límite, 503 dependencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/financieras": {
+      "get": {
+        "operationId": "ListarFinancieras",
+        "summary": "ListarFinancieras",
+        "tags": ["Financieras"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Bank"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error normalizado; 400 validación, 401 autenticación, 403 rol, 404 alcance, 409 conflicto, 412 versión, 413 tamaño, 415 formato, 422 regla, 429 límite, 503 dependencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/solicitudes": {
+      "post": {
+        "operationId": "CrearYEnviar",
+        "summary": "CrearYEnviar",
+        "tags": ["Solicitudes"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Application"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Versión entre comillas para If-Match"
+              },
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Identificador de trazabilidad"
+              },
+              "Location": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Recurso creado"
+              }
+            }
+          },
+          "default": {
+            "description": "Error normalizado; 400 validación, 401 autenticación, 403 rol, 404 alcance, 409 conflicto, 412 versión, 413 tamaño, 415 formato, 422 regla, 429 límite, 503 dependencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 100,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationInput"
+              },
+              "example": {
+                "client": {
+                  "name": "Cliente Ficticio Uno",
+                  "email": "cliente@example.test",
+                  "identification": "DEMO-000001",
+                  "incomeCents": 250000
+                },
+                "vehicle": {
+                  "brand": "Marca Demo",
+                  "model": "Modelo Uno",
+                  "year": 2026,
+                  "priceCents": 3000000
+                },
+                "financing": {
+                  "downPaymentCents": 900000,
+                  "termMonths": 48
+                },
+                "consent": {
+                  "accepted": true,
+                  "channel": "web",
+                  "evidence": "Consentimiento ficticio registrado para demostración académica"
+                },
+                "banks": ["pichincha", "pacifico"],
+                "scenario": "aprobada"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "ListarSolicitudes",
+        "summary": "ListarSolicitudes",
+        "tags": ["Solicitudes"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error normalizado; 400 validación, 401 autenticación, 403 rol, 404 alcance, 409 conflicto, 412 versión, 413 tamaño, 415 formato, 422 regla, 429 límite, 503 dependencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["ENVIADA", "OFERTAS", "SIN_OFERTAS", "ACEPTADA", "DESISTIDA"]
+            }
+          },
+          {
+            "name": "bank",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["pichincha", "pacifico"]
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["asc", "desc"]
+            }
+          }
+        ]
+      }
+    },
+    "/v1/solicitudes/{id}": {
+      "get": {
+        "operationId": "ConsultarSolicitud",
+        "summary": "ConsultarSolicitud",
+        "tags": ["Solicitudes"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Application"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Versión entre comillas para If-Match"
+              },
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Identificador de trazabilidad"
+              },
+              "Location": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Recurso creado"
+              }
+            }
+          },
+          "default": {
+            "description": "Error normalizado; 400 validación, 401 autenticación, 403 rol, 404 alcance, 409 conflicto, 412 versión, 413 tamaño, 415 formato, 422 regla, 429 límite, 503 dependencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "Sin cambios; cuerpo vacío"
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "If-None-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/solicitudes/{id}/respuestas": {
+      "get": {
+        "operationId": "ConsultarRespuestas",
+        "summary": "ConsultarRespuestas",
+        "tags": ["Solicitudes"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "pichincha": {
+                      "$ref": "#/components/schemas/Submission"
+                    },
+                    "pacifico": {
+                      "$ref": "#/components/schemas/Submission"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error normalizado; 400 validación, 401 autenticación, 403 rol, 404 alcance, 409 conflicto, 412 versión, 413 tamaño, 415 formato, 422 regla, 429 límite, 503 dependencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/solicitudes/{id}/ofertas": {
+      "get": {
+        "operationId": "CompararOfertas",
+        "summary": "CompararOfertas",
+        "tags": ["Solicitudes"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Offer"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error normalizado; 400 validación, 401 autenticación, 403 rol, 404 alcance, 409 conflicto, 412 versión, 413 tamaño, 415 formato, 422 regla, 429 límite, 503 dependencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/solicitudes/{id}/eventos": {
+      "get": {
+        "operationId": "ConsultarBitacora",
+        "summary": "ConsultarBitacora",
+        "tags": ["Solicitudes"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Audit"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error normalizado; 400 validación, 401 autenticación, 403 rol, 404 alcance, 409 conflicto, 412 versión, 413 tamaño, 415 formato, 422 regla, 429 límite, 503 dependencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/solicitudes/{id}/ofertas/{offerId}/aceptar": {
+      "post": {
+        "operationId": "AceptarOferta",
+        "summary": "AceptarOferta",
+        "tags": ["Solicitudes"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Application"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Versión entre comillas para If-Match"
+              },
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Identificador de trazabilidad"
+              },
+              "Location": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Recurso creado"
+              }
+            }
+          },
+          "default": {
+            "description": "Error normalizado; 400 validación, 401 autenticación, 403 rol, 404 alcance, 409 conflicto, 412 versión, 413 tamaño, 415 formato, 422 regla, 429 límite, 503 dependencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "offerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 100,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\"[0-9]+\"$"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/solicitudes/{id}/desistir": {
+      "post": {
+        "operationId": "Desistir",
+        "summary": "Desistir",
+        "tags": ["Solicitudes"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Application"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Versión entre comillas para If-Match"
+              },
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Identificador de trazabilidad"
+              },
+              "Location": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Recurso creado"
+              }
+            }
+          },
+          "default": {
+            "description": "Error normalizado; 400 validación, 401 autenticación, 403 rol, 404 alcance, 409 conflicto, 412 versión, 413 tamaño, 415 formato, 422 regla, 429 límite, 503 dependencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 100,
+              "pattern": "^[A-Za-z0-9_-]+$"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\"[0-9]+\"$"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/webhooks/financieras/{bank}": {
+      "post": {
+        "operationId": "RecibirRespuesta",
+        "summary": "RecibirRespuesta",
+        "tags": ["Integraciones"],
+        "security": [
+          {
+            "webhookSignature": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ack"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error normalizado; 400 validación, 401 autenticación, 403 rol, 404 alcance, 409 conflicto, 412 versión, 413 tamaño, 415 formato, 422 regla, 429 límite, 503 dependencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "bank",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["pichincha"]
+            }
+          },
+          {
+            "name": "X-Timestamp",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{13}$"
+            }
+          },
+          {
+            "name": "X-Signature",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BankResult"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/admin/solicitudes/{id}/reintentar": {
+      "post": {
+        "operationId": "ReintentarDLQ",
+        "summary": "ReintentarDLQ",
+        "tags": ["Administración"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Application"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Versión entre comillas para If-Match"
+              },
+              "X-Correlation-ID": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Identificador de trazabilidad"
+              },
+              "Location": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Recurso creado"
+              }
+            }
+          },
+          "default": {
+            "description": "Error normalizado; 400 validación, 401 autenticación, 403 rol, 404 alcance, 409 conflicto, 412 versión, 413 tamaño, 415 formato, 422 regla, 429 límite, 503 dependencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/admin/metrics": {
+      "get": {
+        "operationId": "ConsultarMetricas",
+        "summary": "ConsultarMetricas",
+        "tags": ["Administración"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación completada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Metrics"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error normalizado; 400 validación, 401 autenticación, 403 rol, 404 alcance, 409 conflicto, 412 versión, 413 tamaño, 415 formato, 422 regla, 429 límite, 503 dependencia",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "webhookSignature": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Signature",
+        "description": "HMAC-SHA256(secret, timestamp + punto + cuerpo JSON exacto), X-Timestamp milisegundos, ventana 5 min. Evento deduplicado."
+      }
+    },
+    "schemas": {
+      "Problem": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "minimum": 400,
+            "maximum": 599
+          },
+          "detail": {
+            "type": "string"
+          },
+          "instance": {
+            "type": "string"
+          },
+          "correlationId": {
+            "type": "string"
+          }
+        },
+        "required": ["type", "title", "status", "detail", "instance", "correlationId"]
+      },
+      "Login": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 120
+          },
+          "password": {
+            "type": "string",
+            "minLength": 12,
+            "maxLength": 128
+          }
+        },
+        "required": ["email", "password"]
+      },
+      "Actor": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "sub": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "role": {
+            "type": "string",
+            "enum": ["asesor", "supervisor", "administrador"]
+          },
+          "agency": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "required": ["sub", "role", "agency", "name"]
+      },
+      "Session": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/Actor"
+          },
+          "expiresIn": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3600
+          }
+        },
+        "required": ["token", "user", "expiresIn"]
+      },
+      "Client": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 100
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 120
+          },
+          "identification": {
+            "type": "string",
+            "pattern": "^DEMO-[0-9]{6}$"
+          },
+          "incomeCents": {
+            "type": "integer",
+            "minimum": 10000,
+            "maximum": 100000000
+          }
+        },
+        "required": ["name", "email", "identification", "incomeCents"]
+      },
+      "Vehicle": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "brand": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "model": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "year": {
+            "type": "integer",
+            "minimum": 2000,
+            "maximum": 2030
+          },
+          "priceCents": {
+            "type": "integer",
+            "minimum": 100000,
+            "maximum": 20000000
+          }
+        },
+        "required": ["brand", "model", "year", "priceCents"]
+      },
+      "Financing": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "downPaymentCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "termMonths": {
+            "type": "integer",
+            "enum": [12, 24, 36, 48, 60, 72]
+          }
+        },
+        "required": ["downPaymentCents", "termMonths"]
+      },
+      "Consent": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "accepted": {
+            "type": "boolean",
+            "enum": [true]
+          },
+          "channel": {
+            "type": "string",
+            "enum": ["web", "agencia"]
+          },
+          "evidence": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 500
+          }
+        },
+        "required": ["accepted", "channel", "evidence"]
+      },
+      "ApplicationInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "client": {
+            "$ref": "#/components/schemas/Client"
+          },
+          "vehicle": {
+            "$ref": "#/components/schemas/Vehicle"
+          },
+          "financing": {
+            "$ref": "#/components/schemas/Financing"
+          },
+          "consent": {
+            "$ref": "#/components/schemas/Consent"
+          },
+          "banks": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["pichincha", "pacifico"]
+            },
+            "minItems": 1,
+            "maxItems": 2,
+            "uniqueItems": true
+          },
+          "scenario": {
+            "type": "string",
+            "enum": [
+              "aprobada",
+              "condiciones",
+              "rechazada",
+              "informacion",
+              "demora",
+              "temporal",
+              "timeout"
+            ]
+          }
+        },
+        "required": ["client", "vehicle", "financing", "consent", "banks", "scenario"]
+      },
+      "Offer": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bank": {
+            "type": "string",
+            "enum": ["pichincha", "pacifico"]
+          },
+          "annualRate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "termMonths": {
+            "type": "integer",
+            "minimum": 12,
+            "maximum": 72
+          },
+          "installmentCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "downPaymentCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "insuranceCents": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "maxItems": 10
+          }
+        },
+        "required": [
+          "id",
+          "bank",
+          "annualRate",
+          "termMonths",
+          "installmentCents",
+          "downPaymentCents",
+          "insuranceCents",
+          "conditions"
+        ]
+      },
+      "Audit": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "actor": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "correlationId": {
+            "type": "string"
+          }
+        },
+        "required": ["at", "actor", "action", "correlationId"]
+      },
+      "Submission": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "PENDIENTE",
+              "EN_ANALISIS",
+              "APROBADA",
+              "CONDICIONES",
+              "RECHAZADA",
+              "INFORMACION",
+              "ERROR"
+            ]
+          },
+          "externalId": {
+            "type": "string"
+          },
+          "offer": {
+            "$ref": "#/components/schemas/Offer"
+          },
+          "jobState": {
+            "type": "string",
+            "enum": ["pending", "leased", "done", "dead"]
+          }
+        },
+        "required": ["state", "jobState"]
+      },
+      "Application": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "agency": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": ["ENVIADA", "OFERTAS", "SIN_OFERTAS", "ACEPTADA", "DESISTIDA"]
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100000000
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "client": {
+            "$ref": "#/components/schemas/Client"
+          },
+          "vehicle": {
+            "$ref": "#/components/schemas/Vehicle"
+          },
+          "financing": {
+            "$ref": "#/components/schemas/Financing"
+          },
+          "banks": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["pichincha", "pacifico"]
+            }
+          },
+          "scenario": {
+            "type": "string",
+            "enum": [
+              "aprobada",
+              "condiciones",
+              "rechazada",
+              "informacion",
+              "demora",
+              "temporal",
+              "timeout"
+            ]
+          },
+          "submissions": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "pichincha": {
+                "$ref": "#/components/schemas/Submission"
+              },
+              "pacifico": {
+                "$ref": "#/components/schemas/Submission"
+              }
+            }
+          },
+          "audit": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Audit"
+            }
+          },
+          "acceptedOfferId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "id",
+          "agency",
+          "state",
+          "version",
+          "createdAt",
+          "client",
+          "vehicle",
+          "financing",
+          "banks",
+          "scenario",
+          "submissions",
+          "audit"
+        ]
+      },
+      "Page": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Application"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10000
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          }
+        },
+        "required": ["items", "page", "size", "total"]
+      },
+      "BankResult": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "eventId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "applicationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "bank": {
+            "type": "string",
+            "enum": ["pichincha", "pacifico"]
+          },
+          "externalId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "decision": {
+            "type": "string",
+            "enum": ["APROBADA", "CONDICIONES", "RECHAZADA", "INFORMACION"]
+          },
+          "offer": {
+            "$ref": "#/components/schemas/Offer"
+          }
+        },
+        "required": ["eventId", "applicationId", "bank", "externalId", "decision"]
+      },
+      "Ack": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "accepted": {
+            "type": "boolean"
+          }
+        },
+        "required": ["accepted"]
+      },
+      "Health": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["ok"]
+          }
+        },
+        "required": ["status"]
+      },
+      "Bank": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "enum": ["pichincha", "pacifico"]
+          },
+          "name": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": "string"
+          },
+          "academic": {
+            "type": "boolean"
+          }
+        },
+        "required": ["id", "name", "protocol", "academic"]
+      },
+      "Metrics": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "requests": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "failures": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "uptimeSeconds": {
+            "type": "number"
+          },
+          "memoryRssBytes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000000000000
+          },
+          "cpuUserMicros": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000000000000
+          },
+          "cpuSystemMicros": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000000000000000
+          },
+          "queuePending": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          },
+          "queueDead": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100000000
+          }
+        },
+        "required": [
+          "requests",
+          "failures",
+          "uptimeSeconds",
+          "memoryRssBytes",
+          "cpuUserMicros",
+          "cpuSystemMicros",
+          "queuePending",
+          "queueDead"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-16",
+  "command": "npm run test:unit",
+  "tests": 102,
+  "testFiles": 7,
+  "networkAndRealDatabase": false,
+  "scope": "backend/src/**/*.ts",
+  "excludedProcessEntrypoints": ["backend/src/main.ts", "backend/src/worker-main.ts"],
+  "totals": {
+    "lines": {
+      "total": 368,
+      "covered": 368,
+      "skipped": 0,
+      "pct": 100
+    },
+    "statements": {
+      "total": 423,
+      "covered": 423,
+      "skipped": 0,
+      "pct": 100
+    },
+    "functions": {
+      "total": 96,
+      "covered": 96,
+      "skipped": 0,
+      "pct": 100
+    },
+    "branches": {
+      "total": 322,
+      "covered": 321,
+      "skipped": 0,
+      "pct": 99.68
+    },
+    "branchesTrue": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": "Unknown"
+    }
+  }
+}

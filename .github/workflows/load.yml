@@ -1,0 +1,45 @@
+name: Authorized load test (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      scenario:
+        type: choice
+        options: [sustained, spike]
+        required: true
+      target:
+        description: Exact API origin from LOAD_ALLOWED_ORIGIN
+        required: true
+permissions:
+  contents: read
+jobs:
+  load:
+    if: vars.LOAD_TEST_APPROVED == 'true'
+    environment: load-testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BASE_URL: ${{ inputs.target }}
+      LOAD_ALLOWED_ORIGIN: ${{ vars.LOAD_ALLOWED_ORIGIN }}
+      LOAD_EMAIL: ${{ secrets.LOAD_EMAIL }}
+      LOAD_PASSWORD: ${{ secrets.LOAD_PASSWORD }}
+      SCENARIO: ${{ inputs.scenario }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate authorization before any HTTP request
+        run: |
+          node - <<'NODE'
+          const target = new URL(process.env.BASE_URL);
+          if (target.origin !== process.env.LOAD_ALLOWED_ORIGIN || target.origin !== process.env.BASE_URL || target.protocol !== 'https:') throw new Error('Target is not the explicitly approved HTTPS origin');
+          if (!process.env.LOAD_EMAIL || !process.env.LOAD_PASSWORD) throw new Error('Missing test credentials');
+          NODE
+      - uses: grafana/setup-k6-action@v1
+      - name: Run selected scenario
+        shell: bash
+        run: |
+          mkdir -p artifacts
+          k6 run --out json=artifacts/samples.json --summary-export=artifacts/summary.json "scripts/load/${SCENARIO}.js"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: load-${{ inputs.scenario }}
+          path: artifacts

@@ -1,0 +1,46 @@
+{
+  "name": "proyecto-api-final",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "backend",
+    "frontend",
+    "mocks"
+  ],
+  "engines": {
+    "node": ">=22.16.0"
+  },
+  "scripts": {
+    "dev": "node --env-file=.env --import tsx scripts/dev.ts",
+    "seed": "node --env-file=.env --import tsx backend/src/seed.ts",
+    "build": "npm run build --workspaces",
+    "typecheck": "tsc --noEmit && npm run typecheck --workspaces",
+    "lint": "eslint backend frontend mocks shared scripts tests playwright.config.ts --max-warnings 0",
+    "test": "npm run test --workspaces",
+    "test:backend": "npm run test --workspace backend",
+    "test:e2e": "playwright test",
+    "contract": "tsx scripts/validate-contract.ts",
+    "docs:check": "tsx scripts/check-docs.ts",
+    "check": "npm run lint && npm run typecheck && npm run contract && npm run build && npm test && npm run docs:check",
+    "test:unit": "npm run test:unit --workspace backend",
+    "test:integration": "npm run test:integration --workspace backend",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@apidevtools/swagger-parser": "^12.0.0",
+    "@eslint/js": "^9.37.0",
+    "@playwright/test": "^1.56.0",
+    "@types/node": "^22.18.0",
+    "@vitest/coverage-v8": "^5.0.5",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "eslint": "^9.37.0",
+    "prettier": "^3.9.10",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.0",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
+  }
+}

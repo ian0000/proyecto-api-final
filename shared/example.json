@@ -1,0 +1,25 @@
+{
+  "client": {
+    "name": "Cliente Ficticio Uno",
+    "email": "cliente@example.test",
+    "identification": "DEMO-000001",
+    "incomeCents": 250000
+  },
+  "vehicle": {
+    "brand": "Marca Demo",
+    "model": "Modelo Uno",
+    "year": 2026,
+    "priceCents": 3000000
+  },
+  "financing": {
+    "downPaymentCents": 900000,
+    "termMonths": 48
+  },
+  "consent": {
+    "accepted": true,
+    "channel": "web",
+    "evidence": "Consentimiento ficticio registrado para demostración académica"
+  },
+  "banks": ["pichincha", "pacifico"],
+  "scenario": "aprobada"
+}

@@ -1,0 +1,606 @@
+# PROMPT MAESTRO — PROYECTO API FINAL
+## Fábrica de Crédito Vehicular — Proyecto académico de maestría
+
+### 1. Rol y objetivo
+
+Actúa como arquitecto de software senior, desarrollador full-stack y responsable de DevOps.
+
+Tu misión es analizar, mejorar, documentar, implementar, probar y desplegar el proyecto académico **Fábrica de Crédito Vehicular**, cumpliendo los criterios de la rúbrica proporcionada.
+
+No quiero que simplemente implementes lo que aparece en los documentos. Quiero que evalúes críticamente la propuesta, identifiques inconsistencias, simplifiques lo innecesario y propongas soluciones técnicas justificadas.
+
+El objetivo es construir un proyecto:
+
+- Funcional, demostrable y accesible mediante Internet.
+- Con arquitectura API-First, contrato OpenAPI y buenas prácticas.
+- Sencillo de comprender, mantener, desarrollar y defender académicamente.
+- Con seguridad, pruebas, CI/CD y documentación reproducible.
+- Diseñado para cumplir el máximo nivel posible de la rúbrica.
+- Sin complejidad artificial ni servicios innecesarios.
+
+**Regla de aislamiento:** trabaja exclusivamente con la documentación y las instrucciones de este proyecto. No incorpores requisitos, tecnologías ni decisiones de otros proyectos o repositorios de GitHub.
+
+### 2. Material de entrada y revisión inicial
+
+Antes de crear código, revisa completamente todos los archivos que te proporcionaré:
+
+1. `Fabrica_de_Credito_RF_RNF.docx`
+2. `fase1.docx`
+3. `fase2.docx`
+4. Diagrama de arquitectura proporcionado como imagen.
+5. Rúbrica académica y especificaciones de las cuatro fases.
+6. Cualquier documento adicional que adjunte a este proyecto.
+
+Si alguno no está disponible en tu entorno, solicítalo antes de tomar decisiones que dependan de él.
+
+Analiza:
+
+- Objetivos y justificación del negocio.
+- Requerimientos funcionales y no funcionales.
+- Alcance y prioridades.
+- Arquitectura propuesta y patrones.
+- Modelo de datos y contratos.
+- Seguridad, despliegue y rendimiento.
+- Contradicciones entre los documentos.
+- Elementos que faltan para cumplir la rúbrica.
+- Componentes que conviene conservar, modificar o eliminar.
+
+Presta especial atención a las inconsistencias relacionadas con los nombres de las financieras, la base de datos, la cobertura mínima de pruebas y los objetivos de latencia.
+
+Las decisiones explícitas de este prompt prevalecen sobre las tecnologías originales cuando exista incompatibilidad. El resto de los requerimientos debe conservarse o adaptarse justificadamente.
+
+No elimines requisitos silenciosamente: documenta las diferencias y cómo se resolverán.
+
+**Primera actividad obligatoria:** presentar un diagnóstico y un plan de implementación concreto. Después, procede de manera autónoma con los cambios pequeños y aprobados por estas instrucciones. Consulta únicamente cuando aparezca una decisión importante no cubierta aquí.
+
+### 3. Alcance funcional de la aplicación
+
+El sistema representa una plataforma para gestionar solicitudes de crédito vehicular mediante un canal API único.
+
+El flujo principal debe ser:
+
+1. Un asesor inicia sesión.
+2. Registra una solicitud de crédito vehicular con datos ficticios.
+3. Proporciona los datos del cliente, vehículo y financiamiento.
+4. Registra el consentimiento requerido.
+5. Selecciona las financieras a las que quiere enviar la solicitud.
+6. El backend valida y registra la información.
+7. Se procesan los envíos a las financieras simuladas.
+8. Cada financiera responde mediante su API mock.
+9. La aplicación muestra las respuestas y estados.
+10. El asesor compara ofertas y acepta una.
+11. Se actualiza el estado final y queda evidencia de los eventos.
+
+La interfaz web debe ser simple, agradable, responsive e intuitiva. Prioriza la claridad del flujo y una experiencia realista de uso, sin implementar funciones innecesarias.
+
+Considera pantallas como inicio de sesión, dashboard, registro de solicitudes, listado y seguimiento, detalle, comparación de ofertas e historial.
+
+Los roles de asesor, supervisor y administrador deben implementarse en la medida necesaria para demostrar autenticación, autorización y restricciones de acceso. Evita construir módulos administrativos extensos sin valor para la demostración.
+
+Implementa prioritariamente las funcionalidades que permitan demostrar los RF más importantes, la arquitectura y la rúbrica. Genera una matriz que distinga requisitos completos, parciales, simulados, pendientes o fuera del MVP.
+
+No simules funcionalidades afirmando que están implementadas cuando no lo están.
+
+### 4. Tecnologías e infraestructura
+
+Las siguientes decisiones ya están establecidas:
+
+**Frontend**
+- React.
+- Preferiblemente TypeScript.
+- Hosting en Microsoft Azure.
+
+**Backend**
+- Node.js.
+- Preferiblemente TypeScript.
+- Hosting en AWS.
+
+**Base de datos**
+- MongoDB Atlas.
+
+**Repositorio**
+- Crear un nuevo repositorio público en GitHub llamado `proyecto-api-final`.
+
+Puedes seleccionar frameworks y bibliotecas complementarias, pero justifica brevemente por qué son adecuados.
+
+Evalúa opciones sencillas, como React + Vite para frontend y Express, Fastify o NestJS para backend. Selecciona la alternativa que tenga mejor equilibrio entre simplicidad, robustez, pruebas y tiempo de implementación.
+
+No introduzcas microservicios, Kubernetes, Redis, un API Gateway adicional u otras herramientas simplemente porque aparecen en el diseño inicial. Primero determina si son necesarios.
+
+Conserva, en la forma más simple que sea técnicamente válida, las propiedades exigidas por la rúbrica: desacoplamiento, resiliencia, seguridad, extensibilidad, observabilidad y rendimiento.
+
+Prioriza alternativas gratuitas o de costo mínimo. Verifica límites, disponibilidad, requisitos y costos actuales de los servicios antes de elegirlos.
+
+No actives recursos facturables ni compromisos de gasto sin mi autorización.
+
+### 5. APIs simuladas de financieras
+
+No disponemos de APIs bancarias reales ni necesitamos conectarnos a ellas.
+
+Para el alcance del proyecto utiliza **dos financieras simuladas**:
+
+- Banco Pichincha.
+- Banco del Pacífico.
+
+Son representaciones académicas ficticias. No afirmes que sus endpoints, protocolos, políticas o decisiones crediticias corresponden a sus sistemas reales.
+
+Desarrolla un servicio mock independiente del backend principal, preferiblemente en Node.js.
+
+Ese servicio debe poder ejecutarse y desplegarse por separado, con su propia URL de acceso, simulando que las financieras son sistemas externos.
+
+Puedes ofrecer las dos financieras desde un mismo servidor mock con rutas o adaptadores independientes, siempre que mantengan contratos y comportamientos diferenciados.
+
+Cada financiera debe poder producir respuestas variables, por ejemplo:
+
+- Solicitud recibida.
+- Solicitud en análisis.
+- Crédito aprobado.
+- Crédito aprobado con condiciones.
+- Crédito rechazado.
+- Solicitud de información adicional.
+- Error temporal o timeout.
+- Oferta con tasa, plazo, cuota, entrada y condiciones simuladas.
+
+Define tasas, montos, plazos y respuestas razonables, pero ficticios.
+
+Utiliza variabilidad controlada o generación pseudoaleatoria con semillas configurables para que las pruebas automatizadas sean reproducibles y las demostraciones puedan producir resultados predecibles.
+
+Propón dos comportamientos de integración diferentes para demostrar el patrón Adapter. Por ejemplo, una financiera con JSON y webhook, y otra con un formato distinto y consulta de estado mediante polling.
+
+La elección debe justificarse como una simulación académica, no como una descripción de las APIs reales.
+
+Incorpora escenarios configurables para demostrar aprobaciones, rechazos, demoras, errores, reintentos y recuperación.
+
+No uses credenciales bancarias reales ni datos personales reales.
+
+### 6. Diseño arquitectónico
+
+Evalúa REST, GraphQL y gRPC tal como exige la rúbrica. Documenta ventajas, desventajas y razones para seleccionar el estilo finalmente implementado.
+
+Da preferencia a REST con OpenAPI para los consumidores, salvo que detectes una justificación técnica claramente superior.
+
+Mantén un modelo canónico para las solicitudes de crédito y adaptadores independientes por financiera.
+
+Analiza y aplica únicamente los patrones necesarios, entre ellos:
+
+- Adapter / Anti-Corruption Layer.
+- API Gateway, si se justifica y puede cubrirse con capacidades de la infraestructura seleccionada.
+- Circuit Breaker.
+- Reintentos y timeouts.
+- Idempotencia.
+- Procesamiento asíncrono.
+- Paginación, filtros y ordenamiento.
+- Autenticación y autorización.
+- Rate limiting.
+- Manejo normalizado de errores.
+- Auditoría y trazabilidad.
+
+Para cada patrón implementado explica qué problema resuelve, dónde se utiliza y cuál es su costo o limitación.
+
+El procesamiento del envío no debe depender de esperar sincrónicamente la respuesta de las financieras.
+
+Evalúa una solución duradera y sencilla de procesamiento asíncrono, por ejemplo un servicio administrado compatible con AWS o una alternativa persistente apropiada. No utilices tareas temporales en memoria como sustituto de una cola fiable.
+
+Analiza también la consistencia de los datos, la concurrencia y la deduplicación de respuestas, teniendo en cuenta que MongoDB reemplaza a PostgreSQL.
+
+Evita una arquitectura distribuida excesiva. Prefiere un backend modular con responsabilidades claras y componentes desplegables separados solo cuando exista una necesidad real.
+
+### 7. Modelo de datos y OpenAPI
+
+Diseña un modelo de MongoDB Atlas adecuado para solicitudes, clientes ficticios, vehículos, financieras, respuestas, ofertas, consentimientos y eventos de auditoría.
+
+Explica las decisiones de embebido y referencias entre documentos, índices, validaciones, operaciones atómicas y transacciones cuando sean necesarias.
+
+Genera un contrato **OpenAPI 3.x contract-first**, autocontenido y válido, que incluya:
+
+- Endpoints y métodos HTTP.
+- Parámetros, request bodies y respuestas.
+- Tipos y esquemas reutilizables.
+- Ejemplos realistas.
+- Autenticación.
+- Códigos de estado.
+- Errores normalizados.
+- Paginación y filtrado.
+- Idempotencia para operaciones sensibles.
+- Versionado `/v1`.
+
+Implementa y verifica la coherencia entre el contrato y la API real.
+
+Incluye una interfaz Swagger UI o equivalente para mostrar y probar los endpoints.
+
+La aplicación, los mocks y las pruebas deben respetar los contratos definidos para cada componente.
+
+### 8. Seguridad
+
+Implementa autenticación mediante JWT correctamente validado, con vencimiento, firma segura y autorización por roles.
+
+Evalúa OAuth 2.0 únicamente si aporta valor al escenario académico. No afirmes utilizar OAuth 2.0 si solo implementas un sistema de JWT propio.
+
+Incluye:
+
+- Hash seguro de contraseñas.
+- Validación de entradas.
+- Control de acceso por rol y agencia cuando corresponda.
+- CORS restrictivo por ambiente.
+- Protección contra abuso.
+- Manejo seguro de errores.
+- Protección de endpoints administrativos.
+- Autenticación de webhooks simulados si se implementan.
+- Gestión de secretos mediante variables seguras.
+- Logs sin información sensible innecesaria.
+
+Como el proyecto se desarrolla con fines académicos, utiliza usuarios, clientes y solicitudes ficticios. Nunca cargues información financiera o personal real.
+
+Documenta las medidas implementadas y las limitaciones del entorno demostrativo respecto a un sistema bancario productivo.
+
+### 9. Estructura de repositorio y documentación
+
+Crea un único repositorio monorepo, salvo que exista una justificación importante para utilizar otra estructura.
+
+Puedes partir de una organización similar a:
+
+```text
+proyecto-api-final/
+├── frontend/
+├── backend/
+├── mocks/
+├── shared/
+├── docs/
+│   ├── fase1/
+│   ├── fase2/
+│   ├── fase3/
+│   ├── fase4/
+│   ├── arquitectura/
+│   ├── adr/
+│   ├── despliegue/
+│   ├── pruebas/
+│   └── sustentacion/
+├── .github/
+│   └── workflows/
+├── README.md
+├── AGENTS.md
+└── ...
+```
+
+Adapta esta estructura si encuentras una alternativa más coherente. No generes carpetas vacías ni capas artificiales.
+
+Crea documentación Markdown clara y concisa, incluyendo:
+
+1. **README.md:** visión general, requisitos, instalación, ejecución local, enlaces de despliegue y demostración.
+2. **AGENTS.md:** instrucciones para Codex y otros agentes, fuentes de verdad, flujo de trabajo, restricciones y validaciones.
+3. **PRODUCT.md:** objetivo, problema y valor para el negocio.
+4. **REQUIREMENTS.md:** requisitos y matriz RF/RNF.
+5. **ARCHITECTURE.md:** arquitectura, componentes, flujos y decisiones.
+6. **DATA_MODEL.md:** diseño de datos MongoDB e índices.
+7. **API_CONTRACT.md:** guía de uso y ubicación del OpenAPI.
+8. **DEPLOYMENT.md:** despliegue en AWS, Azure y MongoDB Atlas.
+9. **CICD.md:** funcionamiento de GitHub Actions y reglas de ejecución selectiva.
+10. **TESTING.md:** estrategia, comandos, cobertura y pruebas de carga.
+11. **BACKLOG.md:** tareas organizadas y prioridades.
+12. **DEFENSA.md:** guía para explicar y defender el proyecto.
+
+Organiza estos documentos sin duplicar información. Si varios documentos tratan un mismo tema, utiliza enlaces entre ellos.
+
+Genera ADRs breves para las decisiones arquitectónicas relevantes, incluyendo alternativas evaluadas y motivos.
+
+Incluye diagramas Mermaid o equivalentes que puedan mantenerse desde el repositorio, especialmente:
+
+- Arquitectura general y despliegue.
+- Flujo de solicitud y procesamiento asíncrono.
+- Integración con las financieras.
+- Modelo de datos.
+- Flujo CI/CD.
+
+Conserva los documentos originales como fuentes de referencia y genera versiones actualizadas que reflejen la implementación real.
+
+### 10. Entregables académicos
+
+Organiza los entregables de acuerdo con las cuatro fases:
+
+**Fase 1 — RA1: Justificación de negocio**
+
+Documenta el problema, la visión, los objetivos medibles, la anatomía y naturaleza de la API, la cadena de valor y el modelo de monetización.
+
+Diferencia claramente monetización indirecta, comisiones propuestas y servicios futuros. No presentes ingresos simulados como ingresos reales.
+
+**Fase 2 — RA2: Arquitectura y patrones**
+
+Entrega diagramas, evaluación REST/GraphQL/gRPC, decisiones técnicas, patrones implementados, ventajas, limitaciones y justificación de la infraestructura.
+
+**Fase 3 — RA3: Modelo y contrato**
+
+Entrega el modelo de datos y el contrato OpenAPI completo, validado y consistente con el código.
+
+**Fase 4 — RA4: Desarrollo, seguridad y despliegue**
+
+Entrega aplicación funcional, autenticación/autorización, pruebas automatizadas, cobertura, pruebas de rendimiento, CI/CD y endpoints accesibles en nube.
+
+Genera una matriz que relacione cada criterio de la rúbrica con sus archivos, pruebas, endpoints y evidencias. Las evidencias solo deben marcarse como verificadas cuando realmente existan.
+
+### 11. Pruebas unitarias, integración y calidad
+
+La rúbrica exige más del 80 % de cobertura. Establece un objetivo interno de al menos 85 % para el código backend sujeto a pruebas unitarias, sin reducirlo mediante exclusiones artificiales.
+
+Incluye pruebas para:
+
+- Validaciones.
+- Servicios de negocio.
+- Autenticación y autorización.
+- Transiciones de estado.
+- Adaptadores.
+- Idempotencia.
+- Errores.
+- Procesamiento asíncrono.
+- Contratos de la API.
+- Componentes y flujos principales del frontend.
+
+Distingue pruebas unitarias, de integración, de contrato y end-to-end.
+
+Genera reportes de cobertura reproducibles.
+
+No ejecutes indiscriminadamente toda la batería de pruebas con cada cambio.
+
+### 12. CI/CD inteligente y selectivo
+
+Configura GitHub Actions para validar únicamente lo afectado por los cambios, respetando dependencias entre componentes.
+
+Comportamiento obligatorio:
+
+| Cambio detectado | Validaciones |
+|---|---|
+| Solo `frontend/` | Frontend |
+| Solo `backend/` | Backend |
+| Solo `mocks/` | Mocks |
+| Frontend y backend | Ambos |
+| Contratos o código compartido | Todos los consumidores afectados |
+| Solo documentación | Validaciones documentales necesarias |
+| Configuración global | Componentes afectados según dependencias |
+
+Utiliza detección de archivos modificados, filtros de rutas o workflows reutilizables.
+
+Evita que los filtros produzcan comprobaciones requeridas permanentemente pendientes en las pull requests.
+
+Para los componentes afectados, ejecuta lint, typecheck, build, pruebas pertinentes y verificaciones de seguridad que correspondan.
+
+Al integrar cambios en la rama principal, despliega únicamente los servicios afectados, siempre que sus dependencias y condiciones de despliegue sean válidas.
+
+Configura las credenciales mediante GitHub Secrets, Environments u opciones seguras equivalentes.
+
+No incluyas secretos en el repositorio ni registros.
+
+Las pruebas de carga y estrés deben poder ejecutarse manualmente mediante `workflow_dispatch` o antes de una entrega relevante. No deben ejecutarse en cada commit o pull request.
+
+Explica los disparadores, las dependencias entre jobs, las condiciones de despliegue y cómo revisar las evidencias.
+
+### 13. Pruebas de rendimiento — k6
+
+Utiliza preferiblemente k6.
+
+Implementa y documenta los dos escenarios obligatorios:
+
+**Escenario A — Carga sostenida**
+- Aumento progresivo desde 0 hasta 100–200 VUs.
+- Ramp-up de 2–3 minutos.
+- Plateau de 5–10 minutos.
+- Ramp-down de 1–2 minutos.
+
+**Escenario B — Spike**
+- Incremento abrupto hasta aproximadamente 500 VUs o entre 5 y 10 veces la carga normal definida.
+- Pico de 1–2 minutos.
+- Retorno inmediato a 0 y análisis de recuperación.
+
+Las pruebas deben trabajar exclusivamente con datos ficticios y servicios simulados.
+
+Genera reportes que incluyan:
+
+- RPS y throughput.
+- Latencia promedio.
+- p90, p95 y p99.
+- Tasa de errores y distribución de códigos HTTP.
+- Consumo de CPU, memoria y recursos de base de datos, cuando puedan medirse.
+- Comportamiento del rate limiting.
+- Fallos y recuperación.
+- Punto o intervalo de ruptura observado.
+
+Para carga sostenida, utiliza la tasa de errores inferior al 1 % como objetivo de la rúbrica.
+
+Conserva como objetivo funcional el p95 inferior a 2 segundos de los RNF y evalúa la meta ideal de 500 ms en endpoints síncronos estándar donde corresponda. Documenta cuál objetivo se aplica a cada operación.
+
+No falsifiques resultados ni afirmes cumplimiento si las métricas no lo demuestran.
+
+Si no se identifica un punto de ruptura exacto, indica el intervalo observado y la metodología utilizada, sin inventar un valor.
+
+Controla el costo y seguridad del entorno de pruebas antes de ejecutar pruebas intensivas.
+
+### 14. Despliegue
+
+Configura y realiza, cuando existan permisos y credenciales adecuados, el despliegue de:
+
+- Frontend React en Azure.
+- Backend Node.js en AWS.
+- MongoDB en Atlas.
+- APIs de financieras simuladas como servicio independiente y accesible desde el backend.
+
+Verifica los servicios disponibles y selecciona opciones adecuadas para un proyecto académico de costo reducido.
+
+No presupongas que todos los servicios son gratuitos. Documenta precios aplicables, límites, riesgos de facturación y cualquier dependencia que requiera intervención manual.
+
+Configura URLs, CORS, variables de entorno, health checks y observabilidad básica.
+
+Documenta cómo reproducir el despliegue desde cero, cómo configurar secretos y cómo ejecutar un rollback razonable.
+
+Incluye Docker cuando aporte portabilidad o facilite el despliegue y las pruebas locales, pero no lo conviertas automáticamente en un requisito para todos los componentes.
+
+No afirmes que un despliegue está completo hasta verificar que los servicios son accesibles y que el flujo principal funciona.
+
+Si faltan credenciales o permisos, prepara todo lo posible y documenta exactamente los pasos pendientes sin inventar resultados.
+
+### 15. Experiencia de usuario y demostración
+
+La interfaz debe parecer un producto realista, aunque sea un prototipo académico funcional.
+
+Prioriza:
+
+- Navegación clara.
+- Diseño visual consistente.
+- Formularios con validación y mensajes útiles.
+- Estados de carga y error.
+- Tablas y filtros comprensibles.
+- Comparación visual de ofertas.
+- Responsividad.
+- Accesibilidad básica.
+- Datos ficticios coherentes.
+
+Proporciona datos semilla y cuentas demo seguras para los roles necesarios.
+
+Incluye un escenario de demostración reproducible, desde el inicio de sesión hasta la aceptación de una oferta y la consulta de la bitácora.
+
+El demostrador debe permitir provocar escenarios favorables y de error sin depender de resultados completamente aleatorios.
+
+### 16. Preparación de la sustentación
+
+Genera una guía clara para explicar el proyecto sin entrar en detalles innecesarios.
+
+Debe responder, entre otras, estas preguntas:
+
+- ¿Qué problema de negocio resuelve?
+- ¿Dónde aparece el valor de la API?
+- ¿Cómo podría monetizarse?
+- ¿Por qué se seleccionó REST?
+- ¿Por qué MongoDB?
+- ¿Por qué React y Node.js?
+- ¿Por qué AWS y Azure?
+- ¿Qué patrones se utilizaron y por qué?
+- ¿Cómo se integran los mocks?
+- ¿Qué sucede si una financiera deja de responder?
+- ¿Cómo se evita duplicar solicitudes?
+- ¿Cómo funciona la seguridad?
+- ¿Cómo se garantiza la calidad?
+- ¿Qué demuestra el CI/CD selectivo?
+- ¿Cómo interpretar las pruebas de carga y spike?
+- ¿Qué limitaciones tiene la solución?
+
+Prepara un guion de demostración y una propuesta adaptable de distribución de la sustentación entre integrantes, sin asumir el número de participantes.
+
+Incluye posibles preguntas difíciles del docente con respuestas concretas y técnicamente defendibles.
+
+Usa explicaciones claras, con profundidad suficiente para una maestría, pero sin convertir la documentación en un tratado teórico.
+
+### 17. GitHub y autonomía
+
+Crea el repositorio público `proyecto-api-final`, si está disponible y tienes permisos.
+
+Puedes gestionar autónomamente:
+
+- Creación de carpetas y archivos.
+- Organización de documentación.
+- Implementación de módulos.
+- Instalación de dependencias justificadas.
+- Creación de ramas.
+- Commits.
+- Push.
+- Pull requests.
+- Revisión de cambios.
+- Merge de cambios rutinarios verificados.
+- Correcciones y refactorizaciones pequeñas.
+
+Utiliza commits descriptivos y una estrategia de ramas simple.
+
+No trabajes sobre repositorios ajenos ni modifiques proyectos que no pertenecen a esta solicitud.
+
+Consulta antes de:
+
+- Introducir una modificación arquitectónica importante respecto a las decisiones aceptadas.
+- Cambiar las tecnologías principales.
+- Ampliar considerablemente el alcance.
+- Generar costos o activar servicios facturables.
+- Ejecutar acciones destructivas o irreversibles.
+- Exponer datos, credenciales o recursos sensibles.
+- Eliminar funcionalidades importantes.
+- Adoptar una solución significativamente más compleja sin necesidad.
+
+Puedes tomar decisiones técnicas menores sin pedir autorización constantemente.
+
+Documenta las decisiones relevantes para que sea posible comprender cómo evolucionó el proyecto.
+
+### 18. Orden de ejecución
+
+Trabaja siguiendo estas etapas:
+
+**Etapa 1 — Análisis**
+- Leer todos los documentos y la rúbrica.
+- Detectar problemas y contradicciones.
+- Revisar el alcance realista para las fechas.
+- Proponer la arquitectura mejorada.
+- Definir criterios de aceptación.
+
+**Etapa 2 — Preparación**
+- Crear el repositorio.
+- Establecer estructura y estándares.
+- Generar README, AGENTS, backlog y documentación inicial.
+- Documentar decisiones arquitectónicas.
+
+**Etapa 3 — Diseño**
+- Definir modelo MongoDB.
+- Crear y validar OpenAPI.
+- Definir integración con mocks.
+- Preparar diagramas y contratos.
+
+**Etapa 4 — Implementación**
+- Desarrollar backend.
+- Desarrollar servicio de financieras simuladas.
+- Desarrollar frontend.
+- Implementar autenticación, flujos e integraciones.
+- Incorporar pruebas durante el desarrollo.
+
+**Etapa 5 — Integración y despliegue**
+- Configurar CI/CD selectivo.
+- Preparar AWS, Azure y MongoDB Atlas.
+- Desplegar lo autorizado.
+- Verificar conectividad y flujo extremo a extremo.
+
+**Etapa 6 — Calidad y evaluación**
+- Ejecutar y reportar cobertura.
+- Validar OpenAPI.
+- Ejecutar carga y spike en un entorno autorizado.
+- Analizar métricas.
+- Corregir problemas identificados.
+
+**Etapa 7 — Entrega académica**
+- Actualizar la documentación de las cuatro fases.
+- Completar matriz de rúbrica y evidencias.
+- Generar guía de sustentación.
+- Preparar instrucciones de demostración.
+- Presentar estado final y limitaciones.
+
+Las fechas del enunciado son:
+- U1: 3 de octubre de 2026.
+- U2: 17 de octubre de 2026.
+- U3: 23 de octubre de 2026.
+- U4: 29 de octubre de 2026.
+
+Utiliza estas fechas como referencia académica, verifica cuáles entregas siguen pendientes y prioriza los elementos críticos sin sacrificar la integridad del proyecto.
+
+### 19. Forma de trabajo y comunicación
+
+No me entregues únicamente recomendaciones generales: realiza el trabajo cuando tengas acceso y permisos suficientes.
+
+Al concluir cada etapa relevante, presenta un resumen breve que indique:
+
+- Qué se hizo.
+- Qué decisiones se tomaron y por qué.
+- Qué archivos cambiaron.
+- Qué pruebas se ejecutaron realmente.
+- Cuáles pasaron o fallaron.
+- Qué está pendiente.
+- Qué sigue.
+
+No declares algo como completado sin evidencia.
+
+Si surge un impedimento importante, explica el problema, presenta opciones sencillas y recomienda una.
+
+Mantén un backlog actualizado y evita introducir trabajo adicional fuera del alcance académico.
+
+**Prioridad final:** quiero una API funcional y bien diseñada, documentación comprensible, evidencia verificable de la rúbrica y una aplicación sencilla que pueda presentar con seguridad. Prefiero una solución pequeña pero completa antes que una arquitectura demasiado ambiciosa e incompleta.
+
+Comienza analizando la documentación disponible y elaborando el diagnóstico inicial. Luego continúa con el proyecto siguiendo estas instrucciones.

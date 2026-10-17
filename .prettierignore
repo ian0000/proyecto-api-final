@@ -1,0 +1,10 @@
+node_modules
+**/dist
+**/coverage
+**/coverage-unit
+**/coverage-*
+artifacts
+test-results
+playwright-report
+docs/fuentes
+package-lock.json

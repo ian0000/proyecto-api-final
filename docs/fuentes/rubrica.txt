@@ -1,0 +1,98 @@
+Fase 1: Justificación de Negocio (RA1)
+Acción: Definir el caso de negocio, la cadena de valor de las APIs y cómo el sistema abrirá nuevos flujos de ingresos o maximizará el valor del cliente.
+Entregable: Documento de visión del producto y modelo de monetización/negocio de la API.
+Fase 2: Arquitectura y Patrones (RA2)
+Acción: Evaluar y seleccionar el estilo arquitectónico (REST, GraphQL o gRPC) y definir los patrones de diseño (ej. API Gateway, BFF, Circuit Breaker o paginación/filtrado avanzado).
+Entregable: Diagrama de arquitectura de software y justificación técnica de los patrones elegidos.
+Fase 3: Diseño del Modelo y Especificación (RA3)
+Acción: Diseñar el modelo de datos orientado a APIs y escribir la especificación formal del contrato.
+Entregable: Contrato de la API utilizando la especificación OpenAPI (Swagger) o similar.
+Fase 4: Desarrollo, Seguridad y Despliegue (RA4)
+Acción: Implementar los servicios backend robustos empleando buenas prácticas.
+ 
+ 
+Entregables Técnicos:
+Seguridad: Mecanismos de Autenticación y Autorización utilizando OAuth 2.0 o JWT.
+Calidad: Cobertura de código mediante pruebas unitarias.
+Rendimiento: Reporte de pruebas de estrés / carga (usando herramientas como JMeter o k6).
+DevOps: Despliegue de la API en un entorno de nube o contenedorizado (Docker/Kubernetes).
+Escenarios y Parámetros Técnicos Mínimos con respecto a Pruebas
+Se deben ejecutar y reportar al menos dos escenarios diferenciados para evaluar el comportamiento elástico de la API:
+1. Prueba de Carga Sostenida (Load/Stress Testing)
+Evalúa cómo se comporta la API bajo una demanda superior al promedio esperado para verificar la estabilidad de los recursos (CPU, memoria, base de datos).
+Usuarios Concurrentes Virtuales (VUs): Escalar progresivamente desde 0 hasta un pico de 100 a 200 VUs concurrentes (ajustable según la complejidad de la arquitectura).
+Fase de Ramp-up (Subida): 2 a 3 minutos para alcanzar el pico máximo.
+Fase de Plateau (Meseta): Mantener el pico máximo durante 5 a 10 minutos.
+Fase de Ramp-down (Bajada): 1 a 2 minutos hasta volver a 0.
+2. Prueba de Pico Extremo (Spike Testing)
+Evalúa la resiliencia del sistema, los mecanismos de caché, el rate limiting y las políticas de autoescalado ante un incremento masivo y repentino de tráfico.
+Usuarios Concurrentes Virtuales (VUs): Incrementar abruptamente a un volumen de 5 a 10 veces la carga normal (ej. de 0 a 500 VUs de inmediato).
+Duración del Pico: Mantener la carga extrema durante 1 a 2 minutos.
+Fase de Recuperación: Reducir a 0 inmediatamente después para analizar si el sistema recupera su estado normal de forma automatizada o si se producen caídas en cascada.
+Métricas e Indicadores Clave de Rendimiento (KPIs)
+Los estudiantes deberán incluir en su reporte final gráficas y tablas analíticas con las siguientes métricas clave, las cuales servirán de evidencia para la rúbrica de calificación:
+Rendimiento (Throughput): Medido en Peticiones por Segundo (RPS) o Requests Per Second.
+Tiempos de Respuesta (Latencia):
+Tiempo promedio (Average Response Time).
+Percentiles Críticos (p90, p95 y p99): Cruciales en arquitectura de APIs para medir la experiencia de los usuarios más lentos. El p95 idealmente debe mantenerse por debajo de los 500 ms para endpoints síncronos estándar.
+Tasa de Error (Error Rate): Porcentaje de peticiones fallidas. Para aprobar la rúbrica en nivel Excelente, la tasa de error debe ser inferior al 1% bajo carga sostenida. Se deben rastrear códigos HTTP de error
+Punto de Ruptura (Breakpoint): Identificar con exactitud con cuántos usuarios concurrentes o RPS la API empieza a degradar sus tiempos de respuesta de forma exponencial o a arrojar errores HTTP recurrentes.
+Mapeo de Entregables por Unidad Temática
+Unidad Temática	Componente del Proyecto Final	Fecha de entrega
+U1: Introducción a APIs	Documento de objetivos, anatomía y naturaleza de las APIs del sistema.	 3 octubre 2026
+U2: Arquitecturas y Patrones	Selección razonada de patrones y diseño del ecosistema guiado por APIs.	17 octubre 2026
+U3: Diseño de APIs	Modelo de datos de la API y especificación técnica OpenAPI contract-first.	23 octubre 2026
+U4: Desarrollo de APIs	Código fuente con seguridad, pruebas unitarias/estrés y pipeline de despliegue.	29 octubre 2026
+Estado de la entrega
+Estado de la entrega
+Número del intento	Este es el intento 1.
+Estado de la entrega	Todavía no se han realizado envíos
+Estado de la calificación	Sin calificar
+Tiempo restante	15 días 1 hora restante
+Última modificación	-
+Criterios de calificación
+Rúbrica
+Justificación de Negocio y Anatomía	
+No justifica la necesidad de negocio o la descripción de la anatomía y naturaleza de la API es incorrecta o vaga. La información presentada en menos del 30% correcta.
+0 puntos
+La información es correcta en al menos entre el 60% y el 31%. Identifica la anatomía de la API, pero la justificación de negocio y los objetivos de monetización están incompletos o carecen de sustento estratégico.
+1.6 puntos
+La información es correcta en al menos entre el 90% y el 61%. ustifica la necesidad de negocio y describe la anatomía de la API de forma clara, pero la alineación entre la cadena de valor y las metas del cliente es difusa.
+2.8 puntos
+Explica claramente la necesidad de negocio, la cadena de valor y la estrategia de monetización. Identifica la naturaleza y anatomía de la API de forma impecable.
+4 puntos
+Arquitectura de Software y Patrones	
+La arquitectura o los patrones elegidos son inadecuados para sistemas empresariales, no resuelven el problema o están mal aplicados.
+0 puntos
+Estructura la API con una arquitectura básica, pero omite patrones esenciales (como paginación, filtros o resiliencia) o los aplica con errores.
+1.8 puntos
+Define una arquitectura clara y aplica patrones de diseño orientados a APIs, pero la argumentación técnica de sus decisiones de diseño es débil.
+3.4 puntos
+Evalúa y justifica con alto criterio técnico el estilo arquitectónico elegido. Aplica de manera óptima patrones de diseño empresariales orientados a APIs.
+5 puntos
+Modelado y Contrato de la API	
+El contrato de la API no se entregó, tiene errores críticos de sintaxis que impiden su lectura o no cumple con el estándar técnico.
+0 puntos
+El contrato OpenAPI está incompleto, faltan esquemas importantes o no sigue los estándares de diseño de un modelo orientado a APIs.
+1.6 puntos
+Diseña el modelo de datos y el contrato OpenAPI, pero presenta inconsistencias menores en las rutas, códigos de estado HTTP o tipado de datos.
+2.8 puntos
+Diseña un modelo de datos orientado a APIs estructurado. Entrega un contrato OpenAPI (Swagger) maduro, limpio, sin errores y autocontenida.
+4 puntos
+Implementación, Seguridad y Pruebas	
+El código de los servicios no funciona, no es seguro o no presenta evidencias de pruebas unitarias ni de estrés.
+0 puntos
+El sistema backend funciona a nivel básico, pero la seguridad presenta vulnerabilidades críticas o carece por completo de pruebas de calidad.
+1.8 puntos
+Desarrolla el servicio y la seguridad (OAuth2/JWT) de forma funcional, pero la cobertura de pruebas unitarias es baja o el análisis de estrés es superficial.
+3.4 puntos
+Desarrolla los servicios con autenticación/autorización robusta (OAuth2/JWT). Adjunta pruebas unitarias (>80% cobertura) y reportes de pruebas de estrés.
+5 puntos
+Despliegue y Sustentación Grupal	
+No se realizó el despliegue del sistema. La sustentación grupal es deficiente y no demuestra el nivel de maestría requerido.
+0 puntos
+El despliegue está incompleto o solo corre en local. La sustentación muestra falta de preparación conjunta o una división deficiente del trabajo.
+0.8 puntos
+Despliega la API de forma funcional, pero con fallas menores o locales. La sustentación grupal evidencia un dominio del tema ligeramente desigual.
+1.4 puntos
+Despliega con éxito la API en un entorno accesible (nube/contenedores). La defensa demuestra un dominio crítico, articulado y equitativo del grupo.

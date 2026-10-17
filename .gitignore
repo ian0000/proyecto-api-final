@@ -1,0 +1,13 @@
+node_modules/
+**/dist/
+**/coverage/
+**/coverage-unit/
+**/coverage-*/
+.env
+.env.*
+!.env.example
+artifacts/
+playwright-report/
+test-results/
+*.log
+local-data/

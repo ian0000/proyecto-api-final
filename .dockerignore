@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+**/coverage
+**/coverage-unit
+**/coverage-*
+.git
+.env
+.env.*
+!.env.example
+docs
+artifacts
+playwright-report
+test-results
+frontend/src

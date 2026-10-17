@@ -1,0 +1,181 @@
+
+Fase 2 — Arquitectura y patrones
+Oct 9, 2026 · @alejandro
+Para la Fábrica de Crédito elegimos REST con contrato OpenAPI para la comunicación con los consumidores y un núcleo orientado a eventos para la comunicación con las financieras. Todo se despliega como un monolito modular con dos roles, API y worker, detrás de un API Gateway. Con esta combinación se cumple el tiempo de respuesta que pide el caso, la caída de una financiera no afecta a las demás y se puede agregar una nueva financiera solo con un adaptador.
+1. Drivers arquitectónicos
+Antes de elegir el estilo revisamos qué requerimientos no funcionales son más difíciles de cambiar después, ya que son los que realmente definen la arquitectura. Estos son los cinco que más pesaron:
+Atributo
+Requerimiento
+Consecuencia arquitectónica
+Disponibilidad y aislamiento de fallos
+RNF-07: 99,5 %; la caída de una financiera no afecta a las demás
+Comunicación con financieras desacoplada por cola; un circuit breaker por financiera
+Rendimiento
+RNF-08: p95 menor a 2 s en registro y consulta; envío con confirmación inmediata (202)
+El envío nunca espera a la financiera: patrón Async Request-Reply
+Interoperabilidad y extensibilidad
+RNF-02, RNF-15: adaptador por financiera, modelo canónico, nueva financiera sin tocar el contrato
+Puerto de salida + adaptadores (Anti-Corruption Layer)
+Resiliencia
+RNF-09, RNF-10: reintentos con backoff, DLQ, idempotencia
+Cola con reintentos exponenciales, dead-letter queue e Idempotency-Key
+Seguridad y cumplimiento
+RNF-03 a RNF-06, RNF-13: OAuth 2.0, alcance por agencia, LOPDP, bitácora inmutable
+Gateway + JWT RS256 con scopes; ABAC por agencia; HMAC en webhooks; trigger de inmutabilidad
+2. Evaluación de estilos arquitectónicos
+Para comparar los estilos usamos una matriz con los criterios que salen de los drivers anteriores, cada uno con su peso, y calificamos de 1 a 5. REST obtuvo el mayor puntaje para la parte síncrona (3,90) y el estilo orientado a eventos para la integración con las financieras (3,70), por eso decidimos combinarlos en lugar de escoger solo uno.
+Criterio (peso)
+REST + OpenAPI
+GraphQL
+gRPC
+Orientado a eventos (cola + webhooks)
+Interoperabilidad con financieras y CRM (25 %)
+5: las financieras exponen y consumen HTTP/JSON o XML
+2: ninguna financiera ofrece GraphQL
+1: exige .proto compartidos y HTTP/2 extremo a extremo
+4: webhooks estándar; Originarsa requiere polling
+Desacoplamiento ante caídas (25 %)
+2: síncrono, encadena la disponibilidad
+2: igual que REST
+2: igual, aunque con deadlines
+5: la cola absorbe caídas y picos
+Front web/móvil y caché (15 %)
+4: GET cacheable, ETag, CDN
+3: consultas flexibles, caché HTTP difícil
+1: el navegador necesita gRPC-Web y un proxy
+2: no aplica a consultas del asesor
+Herramientas, contrato y seguridad (15 %)
+5: OpenAPI, OAuth 2.0, gateways, k6, Swagger
+3: esquema fuerte, pero menos soporte en gateways
+3: contrato fuerte, pocos gateways
+3: AsyncAPI menos maduro
+Rendimiento interno (10 %)
+3
+3
+5: binario y multiplexado
+4: asíncrono, sin esperas
+Curva del equipo (10 %)
+5
+3
+2
+3
+Total ponderado
+3,90
+2,50
+2,05
+3,70
+En resumen, usamos REST con contrato OpenAPI para todo lo que el asesor, el CRM y las financieras invocan, y mensajería asíncrona (una cola BullMQ sobre Redis) junto con webhooks para todo lo que depende de una financiera. gRPC no aporta en este caso, ya que no hay llamadas internas en cadena entre servicios que justifiquen su complejidad. GraphQL queda como opción futura para un BFF del comparativo, si el front móvil lo necesita.
+3. Diagrama de arquitectura de software
+La idea principal de la arquitectura es que la API nunca llame a una financiera mientras atiende una petición del asesor. La API deja el trabajo en una cola en Redis y responde de inmediato. Después, el worker toma ese trabajo y llama a cada financiera a través de su adaptador y su circuit breaker. Las respuestas regresan por webhook firmado (BG y BPAC) o por polling (Originarsa).
+
+Arquitectura de software · vista de contenedores (C4 nivel 2)
+El diagrama sigue las capas vistas en clase: la capa de presentación (front y CRM), la capa de aplicación (módulos de la API), la capa de integración (gateway, cola y adaptadores) y la capa de acceso a datos (PostgreSQL y Redis).
+4. Patrones aplicados y justificación
+Cada patrón se eligió para resolver un requerimiento concreto del caso, y todos están implementados y probados en el código de la Fase 4.
+Patrón
+Problema del caso que resuelve
+Dónde se aplica
+Costo o trade-off aceptado
+API Gateway
+Punto único de entrada, TLS, rate limiting y CORS en el borde (RNF-02, RNF-16)
+Kong en modo declarativo delante de la API
+Un salto de red más, unos pocos ms
+Adapter / Anti-Corruption Layer
+Tres financieras con formatos incompatibles: JSON en inglés, snake_case y XML
+Un adaptador por financiera tras la interfaz FinancieraAdapter
+Un adaptador que mantener por financiera
+Modelo canónico
+El asesor y el CRM no deben conocer el formato de cada banco
+Entidad Solicitud y respuesta canónica
+Mapeo de ida y vuelta en cada adaptador
+Async Request-Reply
+El envío no puede esperar a tres bancos (RNF-08)
+POST /envios responde 202 + Location a /respuestas
+El cliente consulta el estado o recibe una notificación
+Cola con reintentos y dead-letter
+Fallos transitorios y caídas de financieras (RNF-09)
+BullMQ: 5 intentos con backoff exponencial de 2 s; DLQ al agotar
+Consistencia eventual del estado
+Circuit Breaker + Bulkhead
+Evitar fallos en cascada y aislar cada financiera (RNF-07)
+Un circuito por financiera (opossum): 50 % de error, reset a 30 s
+Rechazo rápido mientras está abierto
+Idempotency Key
+Reintentos del cliente no deben duplicar solicitudes ni envíos (RNF-10)
+Interceptor sobre Redis, 24 h, devuelve la respuesta original
+Almacenamiento temporal por clave
+Webhook firmado + polling de respaldo
+BG y BPAC notifican; Originarsa no soporta webhooks (RF-09)
+HMAC-SHA256 + ventana de 5 min + deduplicación por X-Event-Id; polling cada 30 s
+Polling genera tráfico aunque no haya cambios
+Paginación, filtros y orden
+Listados de agencias con miles de solicitudes
+page/size (máx. 100), filtros por estado, financiera, fechas y cédula; sort
+Offset pierde eficiencia en páginas muy profundas
+Peticiones condicionales y bloqueo optimista
+Ahorrar ancho de banda y evitar sobrescrituras
+ETag + If-None-Match (304) e If-Match (412)
+El cliente debe guardar el ETag
+Rate limiting por consumidor
+Un consumidor no debe agotar la capacidad de los demás (RNF-16)
+Gateway por IP + API por identidad del token
+Respuestas 429 bajo picos
+Correlation ID y logs estructurados
+Trazabilidad de extremo a extremo (RNF-12)
+X-Correlation-ID propagado hasta las financieras y la bitácora
+—
+CQRS ligero
+Reportes que no compitan con las transacciones (RF-19)
+Consultas de agregación separadas, listas para una réplica de lectura
+Sin base de lectura dedicada en esta versión
+Problem Details (RFC 7807)
+Errores uniformes y comprensibles (RNF-14, RNF-18)
+Filtro global application/problem+json
+—
+HATEOAS ligero
+El front sabe qué acciones permite el estado
+_links según la máquina de estados
+Payload algo mayor
+5. Flujo del envío asíncrono
+En este flujo se ve por qué la arquitectura es asíncrona. El asesor recibe 202 Accepted en milisegundos aunque la financiera esté caída, ya que los reintentos, el circuit breaker y la dead-letter queue trabajan en segundo plano. De esta forma, el tiempo que el asesor espera no depende del tiempo que tardan los bancos.
+
+Secuencia del envío asíncrono · 11 mensajes, 1 fallo reintentado
+En el caso de Originarsa, el paso 9 se reemplaza por el polling que hace el worker cada cierto tiempo. Y si la misma respuesta llega dos veces, la deduplicación por X-Event-Id evita que se aplique de nuevo.
+6. Decisiones de arquitectura (ADR) y patrones descartados
+ADR
+Decisión
+Alternativa descartada
+Motivo
+01
+Monolito modular con dos roles (ROLE=api y ROLE=worker) desde un mismo artefacto
+Microservicios por dominio
+Un solo equipo y un dominio acotado; los roles escalan por separado, que es lo que pide RNF-11, sin la carga operativa de N servicios
+02
+PostgreSQL como almacén transaccional; Redis para colas, idempotencia y rate limiting
+Base NoSQL
+El ciclo de vida exige transacciones y bloqueo de fila al consolidar respuestas concurrentes
+03
+JWT RS256 con JWKS publicado
+HS256 con secreto compartido
+El gateway y otros servicios validan con la clave pública, sin conocer el secreto
+04
+Contrato OpenAPI como fuente de verdad, servido en /docs
+Documentación generada desde el código
+Contract-first (RNF-01): las pruebas validan cada respuesta contra el contrato
+05
+Polling solo para financieras sin webhook, configurable por financiera
+Polling para todas
+Menos tráfico y respuestas más rápidas donde hay webhook
+Patrones del curso evaluados y no aplicados por ahora
+Patrón
+Por qué no en esta versión
+Cuándo sí
+Service Registry
+Con dos roles, el descubrimiento lo resuelve el DNS de la plataforma (Docker, Render o Kubernetes)
+Si se separan microservicios con instancias dinámicas
+Backend for Frontend
+Web y móvil de asesores usan los mismos recursos y casi los mismos campos
+Si la app móvil necesita respuestas compactas o una pantalla que agregue varias llamadas
+CQRS completo (dos bases)
+El volumen de reportes no justifica otra base
+Si los reportes degradan las transacciones: réplica de lectura o almacén analítico

@@ -1,0 +1,32 @@
+[
+  {
+    "file": "Fabrica_de_Credito_RF_RNF.docx",
+    "sha256": "0c1edb29b9b6bccc1724204f1b4d3124d889fb1ec99f31a729424ed6172cd56d",
+    "byteIdentical": true
+  },
+  {
+    "file": "fase1.docx",
+    "sha256": "bff294d96b93f73e5459d8186adc6d410f38e9d683c712ba5f6d5ee1379272cb",
+    "byteIdentical": true
+  },
+  {
+    "file": "fase2.docx",
+    "sha256": "ed04372db7b308977b0ca30a31c7959de3c474303782a2658ae32cda47c1fcb8",
+    "byteIdentical": true
+  },
+  {
+    "file": "prompt-maestro.txt",
+    "sha256": "fd013b8491ba89bd91ddeee792f237869017f53c6fc4f16d1bbadedb3b161427",
+    "byteIdentical": true
+  },
+  {
+    "file": "rubrica.txt",
+    "sha256": "5b74f0d23b916589ba198507852eea6999d7b7a87fdafd2fb7ae14841a461f91",
+    "byteIdentical": true
+  },
+  {
+    "file": "arquitectura-original.png",
+    "sha256": "0f55306c9dffa919e07cde1bc15931af4bd10bfc985a4564d260ace75ecd64b5",
+    "byteIdentical": true
+  }
+]

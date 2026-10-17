@@ -1,0 +1,253 @@
+
+Fase 1 — Visión del producto y modelo de negocio de la API
+Oct 9, 2026 · @alejandro
+La Fábrica de Crédito es una plataforma API-First que funciona como canal único para las solicitudes de crédito vehicular de Corporación Maresa. Hoy cada solicitud se digita y se sigue por separado en el portal de cada financiera. Con la plataforma, el asesor registra la solicitud una sola vez y el sistema se encarga de enviarla a Banco Guayaquil, Originarsa y Banco Pichincha (BPAC), consolidar sus respuestas y comparar las ofertas.
+1. Necesidad de negocio
+El problema de Maresa no está en vender el vehículo, sino en todo lo que pasa después con el crédito. Cada solicitud se digita, se sigue y se compara por separado en tres financieras que tienen portales, formatos y tiempos distintos. Esto hace que el asesor pierda tiempo y que el cliente espere sin saber el estado, y en algunos casos la venta se pierde. Desde esta perspectiva, la necesidad de negocio es cerrar más créditos y más rápido con el mismo equipo de asesores.
+Situación actual (AS-IS)
+Efecto en el negocio
+Respuesta de la Fábrica de Crédito (TO-BE)
+El asesor digita la misma solicitud en el portal de cada financiera
+Hasta 3 veces el tiempo de registro; errores de transcripción
+Registro único en un modelo canónico (RF-01, RF-06)
+Cada financiera exige su formato y documentos
+Reprocesos y rechazos por forma, no por riesgo
+Adaptadores por financiera traducen el formato (RNF-02, RNF-15)
+Seguimiento por correo y llamadas
+Sin trazabilidad; el cliente espera sin saber el estado
+Estado consolidado y por financiera en una sola consulta (RF-08, RF-15)
+No hay comparativo de ofertas
+El cliente no ve la mejor cuota; se pierde la venta ante la competencia
+Comparativo lado a lado y aceptación en un clic (RF-11, RF-12)
+No hay indicadores por financiera, agencia o asesor
+La gerencia no sabe qué financiera aprueba más ni en cuánto tiempo
+Reportes de tasa de aprobación, tiempos y colocación (RF-19)
+Datos personales circulan por correo
+Riesgo legal frente a la LOPDP
+Consentimiento registrado, cifrado y enmascaramiento (RF-04, RNF-04, RNF-06)
+El desembolso y la evaluación crediticia no forman parte del alcance, ya que siguen siendo responsabilidad de cada financiera.
+2. Visión del producto
+La visión del producto es que los asesores y supervisores de Maresa puedan obtener y comparar ofertas de varias financieras con un solo registro. A diferencia de los portales de cada banco, la plataforma centraliza el seguimiento, protege los datos del cliente y hace que Maresa sea dueña de la relación con el cliente y de los datos de cada operación.
+Actores y lo que cada uno obtiene
+Actor
+Rol en el sistema
+Valor que recibe
+Asesor comercial
+Registra, carga documentos, da seguimiento
+Registro en 5 min o menos, una sola pantalla de estado
+Jefe de agencia / supervisor
+Aprueba excepciones y montos altos
+Control de su agencia, aprobaciones con bitácora
+Analista de crédito Maresa
+Revisa calidad y casos especiales
+Visión de todas las agencias
+Financieras (BG, Originarsa, BPAC)
+Reciben y responden por API
+Solicitudes completas, validadas y con consentimiento
+Administrador
+Configura financieras, reglas y usuarios
+Incorporar una financiera sin cambiar código
+CRM/ERP de Maresa
+Recibe la oferta aceptada
+Facturación sin redigitar
+Objetivos medibles (metas propuestas para validar con Maresa)
+Objetivo
+Indicador
+Línea base
+Meta
+Reducir el tiempo de registro
+Minutos por solicitud
+Un registro por financiera
+5 min o menos para todas (RNF-18)
+Acelerar la respuesta al cliente
+Tiempo hasta la primera oferta
+Seguimiento manual
+Notificación automática al cambiar el estado (RF-14)
+Aumentar la conversión
+% de solicitudes con oferta aceptada
+Sin medición
+Medido por agencia y asesor (RF-19)
+Asegurar la disponibilidad
+Disponibilidad mensual
+—
+99,5 %; la caída de una financiera no afecta a las demás (RNF-07)
+Cumplir la LOPDP
+Solicitudes enviadas sin consentimiento
+—
+0, la API lo impide (RF-04)
+El alcance incluye el registro, envío, seguimiento, comparativo, aceptación y desistimiento de las solicitudes. No incluye el desembolso ni la evaluación crediticia. Para el proyecto académico, las APIs de las financieras se simulan con un servicio mock que respeta el formato distinto de cada una.
+3. Cadena de valor de las APIs
+La cadena de valor muestra cómo la API convierte lo que Maresa ya tiene, los datos de clientes y vehículos y la relación con tres financieras, en más créditos cerrados. Cada eslabón responde a una meta concreta del cliente, y esa meta se puede medir con un indicador que la misma API genera.
+
+Cadena de valor de la API · 5 eslabones alineados con las metas de Maresa
+Eslabón
+Meta de Maresa
+Indicador que lo demuestra
+Activos
+No redigitar
+Solicitudes registradas una vez y enviadas a N financieras
+API
+Canal único, trazable y legal
+% de solicitudes con bitácora completa y consentimiento (100 % por diseño)
+Consumidores
+Crecer sin reescribir integraciones
+Tiempo para incorporar una nueva financiera (solo adaptador + configuración)
+Usuarios finales
+Rapidez y transparencia para el cliente
+Minutos de registro; tiempo hasta la primera oferta
+Valor de negocio
+Más ventas e ingresos
+Tasa de aprobación por financiera, ofertas aceptadas y monto colocado
+4. Ecosistema de la API
+La API empieza como un ecosistema interno y de socios (B2B). El ecosistema público queda como una fase futura, para cuando Maresa decida abrir la plataforma a concesionarios de terceros.
+
+Interno
+Socios / Partners (B2B)
+Público (fase futura)
+Audiencia
+Asesores, supervisores, analistas, CRM/ERP de Maresa
+Banco Guayaquil, Originarsa, Banco Pichincha (BPAC)
+Concesionarios externos, nuevas financieras y fintech
+Objetivo estratégico
+Eficiencia operativa y trazabilidad
+Interoperabilidad y nuevo canal de originación para las financieras
+Escala: Maresa como marketplace de crédito vehicular
+Nivel de restricción
+OAuth 2.0 con roles y alcance por agencia
+Contrato formal, webhooks firmados con HMAC, credenciales por financiera
+Autoservicio con planes, API keys y cuotas en el gateway
+Endpoints
+/solicitudes, /reportes, /financieras
+/webhooks/financieras/{financiera} y los adaptadores salientes
+Los mismos /v1 con límites por plan
+5. Modelo de monetización
+La API genera valor de tres formas, que se pueden activar por etapas. Primero, el ahorro de tiempo y el aumento de ventas, que es una monetización indirecta. Después, una comisión por cada crédito formalizado que pagan las financieras. Y finalmente, cuando la plataforma se abra, una suscripción por niveles para concesionarios externos.
+Flujo
+Modelo (según la clasificación del curso)
+Quién paga
+Cómo lo mide la API
+Fase
+Ahorro operativo y más ventas
+Monetización indirecta
+Nadie paga por la API: el retorno llega por más vehículos vendidos
+Tiempo de registro, tasa de aprobación y colocación en /reportes/indicadores
+1 (interno)
+Comisión por originación
+Participación en ingresos (revenue share)
+Cada financiera, solo por crédito formalizado
+Evento FORMALIZADA en la bitácora inmutable, con monto y financiera
+2 (socios)
+Suscripción de concesionarios externos
+Freemium + suscripción por niveles + cargo por excedente
+Concesionarios de terceros
+Cuotas por consumidor en el API Gateway (client_id)
+3 (público)
+Planes propuestos para la fase pública (valores referenciales, a validar con el área comercial)
+Plan
+Solicitudes incluidas / mes
+Financieras
+Funciones
+Precio referencial
+Básico (freemium)
+30
+1
+Registro, seguimiento
+USD 0
+Profesional
+300
+Todas
++ comparativo de ofertas, reportes, webhooks propios
+USD 199 / mes
+Empresarial
+Ilimitadas
+Todas
++ SLA 99,5 %, sandbox, soporte dedicado
+Negociado
+Excedente
+Por encima del plan
+—
+—
+USD 0,80 por solicitud
+Por ejemplo, con 1.000 solicitudes al mes, un 40 % formalizadas y un monto financiado promedio de USD 25.000, una comisión de 1 % generaría 400 × 25.000 × 1 % = USD 100.000 al mes. Estos valores son supuestos de trabajo y no datos de Maresa; el cálculo se puede actualizar con los datos reales que entrega el endpoint de indicadores.
+Este modelo se apoya en el diseño de la API. La comisión solo se cobra cuando ocurre el evento FORMALIZADA, que queda registrado en una bitácora que no se puede modificar, así que la misma trazabilidad sirve como respaldo para la facturación. Además, las cuotas de cada plan se controlan en el API Gateway con el mismo rate limiting por consumidor que ya protege la plataforma.
+6. Anatomía de la API
+A continuación están las ocho capas de la anatomía de una API aplicadas a la Fábrica de Crédito. El detalle completo está en el contrato OpenAPI de la Fase 3.
+Capa
+Decisión en la Fábrica de Crédito
+Ejemplo
+1. Endpoints (URLs)
+Base versionada /v1, recursos en plural, subrecursos para el ciclo de vida
+/v1/solicitudes/{id}/ofertas
+2. Métodos
+GET consulta, POST crea o dispara una acción, PATCH modifica parcialmente
+POST /v1/solicitudes/{id}/envios
+3. Recursos
+Solicitud, Respuesta por financiera, Oferta, Documento, Evento, Financiera
+La solicitud agrega cliente, cónyuge/garante, vehículo y crédito
+4. Parámetros
+Path (id), query (page, size, estado, sort), headers (Idempotency-Key, If-Match, X-Correlation-ID), body JSON
+GET /v1/solicitudes?estado=ENVIADA&sort=-creadoEn
+5. Formato de datos
+JSON, fechas ISO 8601 en UTC, montos en USD con 2 decimales; XML solo hacia el adaptador de BPAC
+"monto": 26392.00
+6. Códigos de estado
+200, 201, 202 (envío asíncrono), 304, 400, 401, 403, 404, 409, 412, 413, 415, 422, 429, 503
+Errores en RFC 7807 application/problem+json
+7. Autenticación / autorización
+OAuth 2.0 con JWT RS256: client_credentials para sistemas y token de usuario para el front; alcances (scopes) y roles; HMAC en webhooks
+Authorization: Bearer <JWT>
+8. Documentación
+OpenAPI 3.0.3 contract-first, Swagger UI en /docs, ejemplos por operación
+GET /openapi.yaml
+7. Naturaleza de la API y dimensiones de diseño
+Por su naturaleza, la Fábrica de Crédito es una API REST síncrona hacia los usuarios y orientada a eventos hacia las financieras. Es decir, al asesor le responde en milisegundos, mientras que el envío a los bancos se procesa en segundo plano y las respuestas llegan por webhook o por consulta periódica.
+Las cuatro dimensiones del contrato digital
+Dimensión
+Cómo se manifiesta
+Intermediaria
+Se ubica entre el front de los asesores, el CRM/ERP y tres financieras heterogéneas; ninguno conoce los detalles del otro
+Abstracta
+El asesor ve un único modelo canónico; JSON en inglés (BG), snake_case con polling (Originarsa) y XML (BPAC) quedan ocultos tras los adaptadores
+Contractual
+El contrato OpenAPI se escribe primero y se verifica en cada build: las pruebas validan cada respuesta real contra él
+Evolutiva
+Versionado por URI (/v1); agregar una financiera solo requiere un adaptador y su configuración, sin cambiar el contrato público
+Las cinco dimensiones de diseño
+Dimensión
+Decisión concreta
+Interoperabilidad
+Modelo canónico + patrón Adapter / Anti-Corruption Layer
+Modularidad
+Monolito modular desplegable como api y worker independientes
+Escalabilidad
+Envío asíncrono con cola; los workers escalan horizontalmente en ferias y fin de mes
+Estandarización
+REST + OpenAPI 3, RFC 7807, ISO 8601, Idempotency-Key, ETag
+Seguridad
+OAuth 2.0 / JWT RS256, alcance por agencia, HMAC en webhooks, enmascaramiento y consentimiento LOPDP
+8. Ciclo de vida, riesgos y supuestos
+Ciclo de vida de la API
+Fase
+Objetivo
+Práctica en este proyecto
+Diseño
+Contrato estandarizado y autoservicio
+OpenAPI escrito antes del código, validado con Redocly y Spectral en el pipeline
+Evolución
+Agregar valor sin romper integraciones
+Cambios compatibles dentro de /v1; un cambio incompatible abre /v2 en paralelo
+Retiro
+Migración ordenada
+Cabeceras Deprecation y Sunset, aviso a consumidores y 410 Gone al cerrar la versión
+Riesgos y mitigación
+Riesgo
+Mitigación
+Una financiera cae o responde lento
+Circuit breaker por financiera, reintentos con backoff y cola dead-letter; las demás siguen operando
+Envíos duplicados por reintentos del cliente
+Idempotency-Key en las operaciones POST
+Fuga de datos personales
+TLS, cifrado en reposo, enmascaramiento en logs y vistas, alcance por agencia
+Las financieras no aceptan el modelo de comisión
+Comenzar solo con monetización indirecta; la comisión se negocia con datos reales de colocación
+Como supuestos, se toma BPAC como el crédito automotriz de Banco Pichincha y el crédito es vehicular. Las cifras de SLA, cobertura y precios son referenciales, y las APIs de las financieras se simulan con mocks basados en sus formatos.
