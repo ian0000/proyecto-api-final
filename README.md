@@ -116,6 +116,8 @@ Esto conserva usuarios, solicitudes y ofertas en el volumen local. No uses `dock
 
 ## Documentación y entregables
 
+El [informe integral en Word](docs/INFORME_FABRICA_DE_CREDITO.docx) explica el funcionamiento, las decisiones técnicas, las evidencias de la rúbrica, los 40 RF/RNF y los pendientes, con manual DEV y guía de sustentación.
+
 | Tema                                    | Documento                                                                                                 |
 | --------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | Problema, objetivos y negocio           | [PRODUCT](docs/PRODUCT.md) · [Fase 1](docs/fase1/ENTREGA.md)                                              |
