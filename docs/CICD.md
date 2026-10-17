@@ -1,6 +1,6 @@
 # CI y límite de CD
 
-[CI](../.github/workflows/ci.yml) se ejecuta en pull requests y pushes a `main`, sin filtros globales `paths` que dejen un estado requerido pendiente. El estado a exigir posteriormente en la protección de rama es **CI / Required checks** (confirmar nombre mostrado en la primera ejecución real). No se ha configurado esa protección ni ejecutado GitHub Actions desde esta sesión.
+[CI](../.github/workflows/ci.yml) se ejecuta en pull requests y pushes a `main`, sin filtros globales `paths` que dejen un estado requerido pendiente. El estado a exigir posteriormente en la protección de rama es **CI / Required checks**. No se ha configurado protección de rama. La primera ejecución real de GitHub Actions pasó todos sus trabajos, incluido Chromium/E2E; véase [EVIDENCIAS](pruebas/EVIDENCIAS.md).
 
 ## Selección por dependencias
 
@@ -39,4 +39,4 @@ No se llama a esta plantilla “CD completado”: el trabajo de publicación se 
 
 ## Estado verificable
 
-Los archivos YAML describen una configuración, no una ejecución de GitHub. Las comprobaciones locales y sus resultados deben aparecer en las evidencias de pruebas. El repositorio público previsto es [ian0000/proyecto-api-final](https://github.com/ian0000/proyecto-api-final); verificar push y primer run en las evidencias de la entrega. Quedan pendientes de preparación cloud: permisos de ambiente, credenciales de despliegue, infraestructura, CD real y mediciones de nube. No hay un deploy exitoso ficticio ni un job vacío que lo afirme.
+La configuración se validó también mediante una ejecución real de GitHub, independiente de los resultados locales. El repositorio público publicado es [ian0000/proyecto-api-final](https://github.com/ian0000/proyecto-api-final); push y primer run verificados en las evidencias de la entrega. Quedan pendientes de preparación cloud: permisos de ambiente, credenciales de despliegue, infraestructura, CD real y mediciones de nube. No hay un deploy exitoso ficticio ni un job vacío que lo afirme.

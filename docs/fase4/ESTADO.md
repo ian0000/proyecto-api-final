@@ -10,7 +10,7 @@ La fase técnica dispone de código local de web, API, worker y mocks; JWT, role
 | Seguridad       | JWT propio, scrypt, RBAC/agencia y webhook HMAC; controles cloud pendientes                                                  |
 | Calidad         | Gates y cobertura en [TESTING](../TESTING.md); 102 unitarias con cobertura >85 %, 23 integración, 9 frontend y 14 mocks PASS |
 | Rendimiento     | Dos escenarios de rúbrica requieren reportes medidos; no sustituir por smoke                                                 |
-| CI/CD           | Preparación en [CICD](../CICD.md); ejecución remota no acreditada por archivo YAML                                           |
+| CI/CD           | Preparación en [CICD](../CICD.md); CI real pasó en GitHub; CD cloud pendiente                                                |
 | Nube            | Pendiente deliberadamente: esta etapa termina antes de preparar AWS/Azure/Atlas                                              |
 | Sustentación    | Guion en [DEFENSA](../DEFENSA.md); nombres y exposición grupal por acordar                                                   |
 

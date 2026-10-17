@@ -149,7 +149,7 @@ describe('workspace interactions', () => {
     expect(body.vehicle.priceCents).toBe(3000000);
     expect(body.consent.accepted).toBe(true);
     expect(body.financing.downPaymentCents).toBe(900000);
-    expect(screen.getByText('SOLICITUD CREADA')).toBeTruthy();
+    expect(screen.getByText('Solicitud registrada')).toBeTruthy();
   });
   it('filters and clears the list through API queries, then closes the session', async () => {
     const fetch = network();

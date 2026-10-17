@@ -37,6 +37,45 @@ const scenarioLabels: Record<Scenario, string> = {
   temporal: 'Fallo temporal y recuperación',
   timeout: 'Timeout persistente',
 };
+function eventLabel(action: string) {
+  const known: Record<string, string> = {
+    REGISTRADA_Y_ENCOLADA: 'Solicitud registrada y envío solicitado',
+    SOLICITUD_CREADA: 'Solicitud registrada',
+    ACEPTADA: 'Oferta seleccionada',
+    DESISTIDA: 'Desistimiento registrado',
+    APROBADA: 'Solicitud aprobada',
+    CONDICIONES: 'Aprobación con condiciones',
+    RECHAZADA: 'Solicitud rechazada',
+    INFORMACION: 'Información adicional solicitada',
+    REINTENTO_MANUAL: 'Reanudación de comunicación solicitada',
+  };
+  if (known[action]) return known[action];
+  const [bank, operation, result] = action.split(':');
+  if (!['pichincha', 'pacifico'].includes(bank)) return 'Actividad registrada';
+  const name = bankName(bank);
+  if (operation === 'DLQ') return `Comunicación con ${name} requiere revisión`;
+  if (operation === 'REINTENTO') return `Reintentando la comunicación con ${name}`;
+  if (operation === 'RESULTADO_PRESERVADO') return `Respuesta de ${name} confirmada`;
+  if (result === 'OK') {
+    if (operation === 'submit') return `Solicitud enviada a ${name}`;
+    if (operation === 'notify') return `Decisión comunicada a ${name}`;
+    if (operation === 'poll') return `Estado consultado en ${name}`;
+  }
+  return 'Actividad registrada';
+}
+function eventActor(actor: string) {
+  if (actor === 'worker') return 'Plataforma';
+  if (actor.startsWith('mock:')) return `${bankName(actor.slice(5))} · simulación`;
+  return (
+    (
+      {
+        'demo-asesor': 'Asesor',
+        'demo-supervisor': 'Supervisor',
+        'demo-administrador': 'Administrador',
+      } as Record<string, string>
+    )[actor] ?? 'Usuario de la agencia'
+  );
+}
 function Badge({ state }: { state: string }) {
   return (
     <span
@@ -861,7 +900,7 @@ export function App() {
                           </div>
                         )}
                         <small className="job-note">
-                          Entrega de integración:{' '}
+                          Comunicación con la financiera:{' '}
                           {s?.jobState === 'dead'
                             ? 'requiere revisión'
                             : s?.jobState === 'done'
@@ -883,9 +922,9 @@ export function App() {
                     <li key={`${event.at}-${i}`}>
                       <span className="timeline-dot" />
                       <div>
-                        <strong>{event.action.replaceAll('_', ' ')}</strong>
+                        <strong>{eventLabel(event.action)}</strong>
                         <small>
-                          {event.actor} · {new Date(event.at).toLocaleString('es-EC')}
+                          {eventActor(event.actor)} · {new Date(event.at).toLocaleString('es-EC')}
                         </small>
                       </div>
                     </li>

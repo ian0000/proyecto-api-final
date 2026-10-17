@@ -11,7 +11,7 @@ Fecha de trabajo: 16 de octubre de 2026 (America/Guayaquil). Este registro corre
 - Mocks: escenarios deterministas, contratos, autenticación, callback permitido, idempotencia, fallos temporales, XML y notificaciones.
 - Navegador real: Playwright con Microsoft Edge en Windows. Flujo de escritorio hasta aceptación y confirmación de ambas notificaciones; formulario de 390 px sin desbordamiento horizontal; supervisor con escritura denegada.
 - Docker: targets backend y mocks construidos; smoke de bundles de producción aprobado. Las bases y contenedores de ese smoke fueron temporales y limpiados.
-- CI: workflows revisados con actionlint; la ejecución remota se acredita por separado cuando exista un run terminado.
+- CI: workflows revisados con actionlint y ejecución real de GitHub Actions aprobada en Linux, incluido navegador Chromium.
 
 ## Cierre de las comprobaciones locales
 
@@ -51,6 +51,12 @@ Comando: `k6 run --summary-export=artifacts/load/smoke-summary.json scripts/load
 | Checks                        |                    60/60 |
 
 El [resumen JSON original](smoke-local.json) conserva los resultados. Este smoke prueba el funcionamiento del script y una carga pequeña local. No acredita 200/500 VUs, elasticidad, SLA, rendimiento en AWS/Azure/Atlas ni punto de ruptura. No se capturó CPU porcentual ni utilización de recursos de Mongo; no se infieren esos valores. Los escenarios obligatorios permanecen pendientes en [RENDIMIENTO](RENDIMIENTO.md).
+
+## Publicación y CI real
+
+Repositorio público: [ian0000/proyecto-api-final](https://github.com/ian0000/proyecto-api-final). Push del commit `17324f009d6fe4cce40e5eedd96774830cd68fd5` verificado contra `origin/main`.
+
+La [primera ejecución CI](https://github.com/ian0000/proyecto-api-final/actions/runs/38998251785) terminó **success**: detección de cambios, documentación, frontend, backend (unitarias e integración Mongo), mocks, contrato, seguridad, E2E Chromium y `Required checks`. Esta evidencia corresponde a ese SHA; cambios posteriores tienen su propia ejecución. Publicar el repositorio y pasar CI no despliega la aplicación en AWS/Azure.
 
 ## Frontera del trabajo
 
