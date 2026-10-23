@@ -121,7 +121,7 @@ node --env-file=.env.atlas backend/dist/worker-main.js
 node --env-file=.env.atlas mocks/dist/main.js
 ```
 
-Cada comando inicia un proceso. Para mantenerlos activos al cerrar SSH deben configurarse servicios supervisados. HTTPS, reverse proxy y permisos de red se detallan en [DEPLOYMENT](docs/DEPLOYMENT.md). La API no depende de ejecutar Vite en EC2.
+Cada comando inicia un proceso. Para mantenerlos activos al cerrar SSH, siga [la instalación de servicios Ubuntu](docs/UBUNTU_SERVICES.md). HTTPS, reverse proxy y permisos de red se detallan en [DEPLOYMENT](docs/DEPLOYMENT.md). La API no depende de ejecutar Vite en EC2.
 
 **Azure:** instala dependencias desde la raíz, ejecuta `npm run build --workspace frontend` y publica `frontend/dist`. Configura `VITE_API_URL` al origen HTTPS real de la API antes de construir. Ajusta también la CSP de `frontend/public/staticwebapp.config.json` y `CORS_ORIGINS` en AWS. Nunca agregues credenciales Atlas a variables `VITE_*`.
 

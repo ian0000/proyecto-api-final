@@ -25,6 +25,8 @@ async function main() {
     throw new Error('The URI database must match DB_NAME, or omit the URI database path.');
   for (const [key, value] of url.searchParams) {
     const normalized = key.toLowerCase();
+    if (normalized === 'w' && value !== 'majority')
+      throw new Error('Atlas w must be majority. Check the final y in w=majority.');
     if (
       (['tls', 'ssl'].includes(normalized) && value.toLowerCase() !== 'true') ||
       (['tlsinsecure', 'tlsallowinvalidcertificates', 'tlsallowinvalidhostnames'].includes(
@@ -73,6 +75,7 @@ try {
     'DB_NAME must name the dedicated application database.',
     'The URI database must match DB_NAME, or omit the URI database path.',
     'TLS and certificate verification must remain enabled.',
+    'Atlas w must be majority. Check the final y in w=majority.',
     'Atlas check failed. Review the URI, database permissions, IP access list and DNS/TLS.',
   ]);
   console.error(

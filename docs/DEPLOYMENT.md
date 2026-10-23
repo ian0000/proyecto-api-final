@@ -84,7 +84,7 @@ Los bundles mantienen dependencias externas: conserve las dependencias instalada
 
 ## Supervisión y entrada HTTPS en EC2
 
-Para mantener los procesos al cerrar SSH, configure tres servicios de un supervisor, por ejemplo systemd: API, worker y mocks. Deben usar usuario de sistema sin privilegios, directorio raíz del proyecto, ruta absoluta al ejecutable Node, archivo privado de configuración y reinicio ante fallo. Los nombres y rutas exactos dependen de la instalación; todavía no se han creado unidades ni validado reinicios en EC2.
+Para mantener los procesos al cerrar SSH, use [el instalador de servicios Ubuntu](UBUNTU_SERVICES.md). Prepara tres unidades systemd con el usuario actual sin privilegios, la ruta absoluta de Node y `.env.atlas`, y configura reinicio ante fallo. Las unidades deben instalarse y comprobarse en EC2; disponer del script no acredita permanencia al cerrar SSH ni recuperación tras reiniciar la instancia.
 
 Use un reverse proxy para terminar HTTPS y reenviar la API a `127.0.0.1:4000`. API y mocks actualmente escuchan en `0.0.0.0`; restrinja sus puertos con firewall y grupo de seguridad. Publique únicamente los puertos necesarios para HTTPS/HTTP y limite SSH al acceso administrativo. Mantenga `4001` privado: los mocks se comunican con la API por loopback dentro de EC2, sin necesitar un dominio público propio. Atlas requiere salida de red, no abrir un puerto MongoDB entrante en EC2.
 

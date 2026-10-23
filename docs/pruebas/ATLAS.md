@@ -21,4 +21,10 @@ El comprobador reproducible de solo lectura es [check-atlas.ts](../../scripts/ch
 
 La lista de red tenía una regla global preexistente; no se cambió porque el clúster también atiende otros usos. El usuario de aplicación tiene alcance de base restringido. La revisión de esa regla se detalla en [ATLAS](../ATLAS.md).
 
-Pendientes: instalar Node/npm y comprobar la configuración privada desde EC2; supervisar los tres procesos; publicar la API con HTTPS; construir y publicar la web en Azure con CSP/CORS correctos; verificar el flujo entre ambos proveedores. Las pruebas de carga completas continúan pendientes.
+## Comprobación comunicada desde EC2
+
+El usuario aportó una captura de la consola de Ubuntu con HTTP 200 en `http://127.0.0.1:4000/health/ready` y `http://127.0.0.1:4001/health/live`. Esto acredita, mediante esa evidencia, la respuesta de API conectada a MongoDB y del proceso mock en EC2. Los comandos no se ejecutaron directamente desde la computadora de desarrollo. La captura no demuestra procesamiento del worker, acceso público HTTPS ni el recorrido desde Azure.
+
+Antes del arranque hubo un error `UnknownReplWriteConcern` por el parámetro `w=majorit` de la URI de EC2. Se indicó corregirlo a `w=majority`; después el usuario compartió las respuestas HTTP 200. El comprobador de Atlas ahora rechaza valores de `w` distintos de `majority` cuando ese parámetro está presente, antes de conectar. La comprobación continúa siendo de solo lectura.
+
+Pendientes: supervisar los tres procesos; verificar permanencia y reinicio de EC2; publicar la API con HTTPS; construir y publicar la web en Azure con CSP/CORS correctos; verificar el flujo entre ambos proveedores. Las pruebas de carga completas continúan pendientes.
