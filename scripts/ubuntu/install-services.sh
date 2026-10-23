@@ -51,7 +51,7 @@ for port in "$CREDITO_API_PORT" "$CREDITO_MOCK_PORT"; do
   fi
   if [[ -n "$(ss -H -ltn "sport = :$port")" ]]; then
     echo "Puerto $port ocupado. Deten los procesos manuales con Ctrl+C antes de instalar." >&2
-    echo 'Si ya usas estos servicios, detenlos con sudo systemctl stop fabrica-api fabrica-worker fabrica-mocks.' >&2
+    echo 'Si ya usas estos servicios, detenlos con sudo -n systemctl stop fabrica-api fabrica-worker fabrica-mocks.' >&2
     exit 1
   fi
 done
@@ -94,20 +94,24 @@ EOF
 done
 
 systemd-analyze verify "$CREDITO_UNITS/"*.service
-sudo -v
+if ! sudo -n true; then
+  echo 'Se requiere acceso sudo sin solicitud de clave para instalar estos servicios.' >&2
+  echo 'El instalador no modifica sudoers ni crea contrasenas; revisa los permisos con el administrador.' >&2
+  exit 1
+fi
 CREDITO_BACKUP_STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 for component in api worker mocks; do
   target="/etc/systemd/system/fabrica-$component.service"
-  if sudo test -e "$target"; then
-    sudo cp -p -- "$target" "$target.backup-$CREDITO_BACKUP_STAMP"
+  if sudo -n test -e "$target"; then
+    sudo -n cp -p -- "$target" "$target.backup-$CREDITO_BACKUP_STAMP"
   fi
-  sudo install -o root -g root -m 0644 "$CREDITO_UNITS/fabrica-$component.service" "$target"
+  sudo -n install -o root -g root -m 0644 "$CREDITO_UNITS/fabrica-$component.service" "$target"
 done
-sudo systemctl daemon-reload
-sudo systemctl enable --now fabrica-mocks.service fabrica-api.service fabrica-worker.service
+sudo -n systemctl daemon-reload
+sudo -n systemctl enable --now fabrica-mocks.service fabrica-api.service fabrica-worker.service
 for service in fabrica-mocks fabrica-api fabrica-worker; do
-  if ! sudo systemctl is-active --quiet "$service"; then
-    echo "Revisa los logs: sudo journalctl -u $service -n 40 --no-pager" >&2
+  if ! sudo -n systemctl is-active --quiet "$service"; then
+    echo "Revisa los logs: sudo -n journalctl -u $service -n 40 --no-pager" >&2
     exit 1
   fi
 done
@@ -116,4 +120,4 @@ curl --fail --silent --show-error --retry 8 --retry-delay 2 --retry-connrefused 
 curl --fail --silent --show-error --retry 8 --retry-delay 2 --retry-connrefused --max-time 5 \
   "http://127.0.0.1:$CREDITO_MOCK_PORT/health/live" >/dev/null
 echo 'Servicios habilitados para el arranque. API y mocks respondieron correctamente.'
-echo 'Comprueba el worker: sudo systemctl status fabrica-worker --no-pager'
+echo 'Comprueba el worker: sudo -n systemctl status fabrica-worker --no-pager'

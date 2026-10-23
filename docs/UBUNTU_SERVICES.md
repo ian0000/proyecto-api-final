@@ -17,12 +17,14 @@ git pull --ff-only origin main
 bash scripts/ubuntu/install-services.sh
 ```
 
-No anteponga `sudo` al comando Bash: el instalador utiliza la instalación Node del usuario actual y solicita sudo solo para instalar y administrar las unidades. No ejecuta `npm ci`, no recompila, no inicializa usuarios y no cambia `.env.atlas`, salvo su permiso de archivo a `600`. Si faltan los bundles o la configuración, termina antes de instalar.
+No anteponga `sudo` al comando Bash: el instalador utiliza la instalación Node del usuario actual y ejecuta `sudo -n` solo para instalar y administrar las unidades. No abre solicitudes de contraseña: si la política existente no permite un comando, termina con error. No modifica sudoers ni crea contraseñas. No ejecuta `npm ci`, no recompila, no inicializa usuarios y no cambia `.env.atlas`, salvo su permiso de archivo a `600`. Si faltan los bundles o la configuración, termina antes de instalar.
+
+Una versión anterior utilizaba `sudo -v`, que puede pedir contraseña aunque `sudo -n true` funcione. Si se detuvo en `[sudo: authenticate] Password:`, cancele con Ctrl+C, actualice el repositorio y ejecute de nuevo el instalador. Los mensajes `CPUAccounting ... removed ... ignored` sobre unidades del sistema son avisos y no esa solicitud de autenticación. La [documentación de sudo](https://www.sudo.ws/docs/man/1.9.14/sudoers.man.pdf) explica que la validación `-v` tiene condiciones específicas para NOPASSWD.
 
 Si encuentra los puertos ocupados, termina sin matar procesos ni instalar las unidades. Detenga únicamente las ejecuciones manuales del proyecto. Si ya estaba usando estos servicios y desea actualizarlos, deténgalos de forma explícita antes de volver a ejecutar el instalador:
 
 ```bash
-sudo systemctl stop fabrica-api fabrica-worker fabrica-mocks
+sudo -n systemctl stop fabrica-api fabrica-worker fabrica-mocks
 ```
 
 Las unidades existentes se conservan con un sufijo `.backup-<fecha>` antes de sustituirse. El instalador valida las unidades con `systemd-analyze verify`, las instala y comprueba estado de procesos y respuestas HTTP de API/mocks. Un error debe revisarse; no se declara la instalación aprobada por haber descargado el script.
@@ -30,8 +32,8 @@ Las unidades existentes se conservan con un sufijo `.backup-<fecha>` antes de su
 ## Comprobar y administrar
 
 ```bash
-sudo systemctl is-active fabrica-api fabrica-worker fabrica-mocks
-sudo systemctl is-enabled fabrica-api fabrica-worker fabrica-mocks
+sudo -n systemctl is-active fabrica-api fabrica-worker fabrica-mocks
+sudo -n systemctl is-enabled fabrica-api fabrica-worker fabrica-mocks
 curl -i http://127.0.0.1:4000/health/ready
 curl -i http://127.0.0.1:4001/health/live
 ```
@@ -39,21 +41,21 @@ curl -i http://127.0.0.1:4001/health/live
 Se esperan tres estados `active`, tres `enabled` y dos respuestas HTTP 200, con los puertos predeterminados. Estos controles no prueban que el worker haya completado una solicitud; ese flujo debe comprobarse aparte. Para revisar logs, sin imprimir el archivo de configuración:
 
 ```bash
-sudo journalctl -u fabrica-api -n 40 --no-pager
-sudo journalctl -u fabrica-worker -n 40 --no-pager
-sudo journalctl -u fabrica-mocks -n 40 --no-pager
+sudo -n journalctl -u fabrica-api -n 40 --no-pager
+sudo -n journalctl -u fabrica-worker -n 40 --no-pager
+sudo -n journalctl -u fabrica-mocks -n 40 --no-pager
 ```
 
 Al cambiar código: detenga los servicios, actualice, instale dependencias si cambió el lockfile, compile backend y mocks y vuelva a iniciarlos. Si cambia la ruta de Node con nvm o mueve el repositorio, ejecute el instalador otra vez para actualizar las rutas absolutas. Cambiar `.env.atlas` requiere reiniciar los procesos que lo consumen:
 
 ```bash
-sudo systemctl restart fabrica-mocks fabrica-api fabrica-worker
+sudo -n systemctl restart fabrica-mocks fabrica-api fabrica-worker
 ```
 
 Puede cerrar las terminales SSH después de las comprobaciones. Una prueba posterior al reinicio de EC2 debe registrar de nuevo los estados y endpoints; el instalador no reinicia la instancia. Para detener y deshabilitar estos servicios:
 
 ```bash
-sudo systemctl disable --now fabrica-api fabrica-worker fabrica-mocks
+sudo -n systemctl disable --now fabrica-api fabrica-worker fabrica-mocks
 ```
 
 ## Estado y siguiente paso
