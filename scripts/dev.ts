@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+const envFile = process.argv[2] ?? '.env';
 const children = [
   ['backend/src/main.ts'],
   ['backend/src/worker-main.ts'],
@@ -12,7 +13,9 @@ const children = [
     'frontend',
   ],
 ].map((args) =>
-  spawn(process.execPath, ['--env-file=.env', '--import', 'tsx', ...args], { stdio: 'inherit' }),
+  spawn(process.execPath, [`--env-file=${envFile}`, '--import', 'tsx', ...args], {
+    stdio: 'inherit',
+  }),
 );
 let stopping = false;
 const stop = () => {

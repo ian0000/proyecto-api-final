@@ -1,85 +1,150 @@
-# Despliegue: diseño preparado, ambientes pendientes
+# Despliegue vigente: Ubuntu y Atlas sin Docker; frontend en Azure
 
-**Punto de corte solicitado:** terminar implementación y validación local antes de preparar ambientes de pruebas AWS y Azure. No se han creado cuentas, recursos, DNS, credenciales, presupuestos, clusters Atlas ni despliegues remotos. Las URLs reales y el comportamiento en proveedores están **PENDIENTES**. Un build local o una plantilla no demuestra disponibilidad pública.
+**Actualización del 22 de octubre de 2026.** La ruta acordada utiliza Node.js directamente en EC2 Ubuntu, MongoDB Atlas y frontend React/Vite independiente en Azure. Docker queda como alternativa histórica conservada en el repositorio; no es un requisito de esta ruta. El contenido anterior de este documento se preservó antes de actualizarlo.
 
-## Topología propuesta
+El usuario informa que EC2 ya existe. Se observó en la consola Atlas el proyecto `Project 0` con `Cluster0` activo, de tipo Free. Eso no demuestra conexión desde EC2, publicación de la API ni despliegue del frontend. La preparación concreta de Atlas y sus pendientes están en [ATLAS](ATLAS.md).
 
-| Componente             | Destino posterior                      | Ejecución                                                                  |
-| ---------------------- | -------------------------------------- | -------------------------------------------------------------------------- |
-| Web React/Vite         | Azure Static Web Apps Free             | Archivos `frontend/dist`; `VITE_API_URL` apunta a la API HTTPS AWS         |
-| API Fastify            | AWS EC2 Linux + Docker                 | Target `backend`, proceso `node backend/dist/main.js`                      |
-| Worker                 | Misma imagen y misma VM inicialmente   | Comando `node backend/dist/worker-main.js`, proceso separado de la API     |
-| Financieras académicas | Servicio Docker independiente en AWS   | Target `mocks`, URL HTTPS propia, `node mocks/dist/main.js`                |
-| Persistencia           | MongoDB Atlas                          | Bases `credito_test` y `credito_test_mocks`, usuarios y permisos limitados |
-| Entrada HTTPS          | Reverse proxy de la VM, por configurar | Dos nombres/orígenes: API y mocks; TLS, límites, reinicios y logs          |
+## Separación entre frontend y backend
 
-EC2 permite mantener el worker activo sin adaptar el diseño a una función efímera. API y worker comparten artefacto; los mocks mantienen despliegue, proceso y contrato propios. La VM inicial es un punto único de fallo y **no tiene autoescalado**. No se atribuye elasticidad al sistema sin medirla. El reverse proxy es la frontera de entrada, sin API Gateway adicional.
+Un repositorio contiene varios componentes; **no es necesario dividirlo en dos repositorios para desplegar frontend y backend por separado**.
 
-La propuesta inicial concentra los contenedores en una VM para reducir costo operativo; pueden separarse luego. El worker no escucha un puerto público. La cola y los leases viven dentro de los documentos MongoDB, no dentro del contenedor. Los mocks también persisten entregas e idempotencia en su base `_mocks`; perderla rompe la recuperación de callbacks.
+| Componente            | Código      | Destino y ejecución                                                  |
+| --------------------- | ----------- | -------------------------------------------------------------------- |
+| Frontend React/Vite   | `frontend/` | Azure: archivos estáticos de `frontend/dist`                         |
+| API Fastify           | `backend/`  | EC2 Ubuntu: `node --env-file=.env.atlas backend/dist/main.js`        |
+| Worker                | `backend/`  | EC2 Ubuntu: `node --env-file=.env.atlas backend/dist/worker-main.js` |
+| Financieras ficticias | `mocks/`    | EC2 Ubuntu: `node --env-file=.env.atlas mocks/dist/main.js`          |
+| Persistencia          | Atlas       | `credito_test` y `credito_test_mocks`                                |
+| Contrato y tipos      | `shared/`   | Compartidos durante desarrollo y compilación                         |
 
-## Contenedores revisables
+El backend mantiene una arquitectura de monolito modular con worker separado. El navegador consume una API HTTP y no accede a MongoDB. Azure sirve el frontend y AWS ejecuta los procesos del backend; son despliegues independientes aunque compartan monorepo y lockfile.
 
-Desde la raíz, con Docker disponible:
-
-```powershell
-docker build --target backend -t credito-backend:local .
-docker build --target mocks -t credito-mocks:local .
+```text
+Navegador -> Frontend HTTPS (Azure)
+          -> API HTTPS (reverse proxy EC2 -> Fastify)
+                            |              |
+                            v              v
+                          Atlas <------ Worker -> Mocks internos
+                            ^                       |
+                            +-----------------------+
 ```
 
-Estos comandos construyen imágenes locales. El `Dockerfile` usa Node 22, compilación TypeScript y usuario `node` sin root. No incorpora `.env`. La API y worker requieren la misma configuración y acceso a MongoDB; el comando del worker sobrescribe el CMD de la imagen backend. El healthcheck externo de la API debe consultar `/health/ready` y el de los mocks `/health/live`. La supervisión del worker debe vigilar proceso, antigüedad de trabajos y cola pendiente/dead, no solo el estado de la API.
+API, worker y mocks comienzan en una sola instancia EC2. El worker no abre un puerto HTTP. La VM es un punto único de fallo y no tiene autoescalado configurado; la persistencia de trabajos y leases vive en Atlas. Los mocks son procesos ficticios con su propia base y contrato.
 
-Las etiquetas base son móviles: registrar digest y SHA Git de las imágenes al hacer la liberación. Validación local y estado de construcción se consignan en [evidencias](pruebas/EVIDENCIAS.md) cuando exista el reporte; este documento describe el procedimiento y no certifica un build.
+## Acceso SSH desde la consola AWS
 
-## Contrato de configuración para la próxima sesión
+La regla SSH con origen "Mi IP" admite conexiones desde la computadora del usuario. La terminal **EC2 Instance Connect del navegador** necesita además permitir el origen del servicio AWS: en el grupo de seguridad de la instancia, use TCP 22 y la lista administrada `com.amazonaws.<region>.ec2-instance-connect` de su región. Conserve el usuario Ubuntu `ubuntu` y confirme que la instancia esté en ejecución con sus comprobaciones de estado aprobadas. Véase [la configuración oficial de EC2 Instance Connect](https://docs.aws.amazon.com/us_en/AWSEC2/latest/UserGuide/ec2-instance-connect-tutorial.html).
 
-| Variable             | API/worker               | Mocks            | Observación                                          |
-| -------------------- | ------------------------ | ---------------- | ---------------------------------------------------- |
-| `MONGODB_URI`        | Sí                       | Sí               | URI TLS Atlas, sin publicarla en logs ni repositorio |
-| `DB_NAME`            | `credito_test`           | `credito_test`   | El proceso mocks añade `_mocks` automáticamente      |
-| `JWT_SECRET`         | Sí                       | No               | Aleatorio, mínimo 32 caracteres                      |
-| `WEBHOOK_SECRET`     | Sí                       | Sí               | Mismo valor para firma y verificación HMAC           |
-| `MOCK_SECRET`        | Sí                       | Sí               | Autorización del tráfico a financieras ficticias     |
-| `MOCK_URL`           | Origen HTTPS mocks       | No               | Sin barra final                                      |
-| `CALLBACK_URL`       | Origen HTTPS API         | Mismo origen API | Sin barra final; el mock valida destino exacto       |
-| `CORS_ORIGINS`       | Origen Azure exacto      | No               | Sin comodín; varios valores separados por coma       |
-| `PORT` / `MOCK_PORT` | 4000                     | 4001             | Puertos privados detrás del proxy                    |
-| `MOCK_SEED`          | No                       | `academico-v1`   | Variabilidad ficticia reproducible                   |
-| `RATE_LIMIT`         | 120 por minuto/identidad | No               | No aumentar silenciosamente para aprobar carga       |
-| `DEMO_PASSWORD`      | Solo herramienta seed    | No               | Mínimo 12 caracteres; credenciales de demostración   |
-| `VITE_API_URL`       | No                       | No               | Valor público incorporado en el build web            |
+Abrir HTTP 80 y HTTPS 443 no habilita SSH. Los puertos internos de este proyecto son 4000 y 4001; no requieren exposición pública. Instalar `curl` y `ca-certificates` no edita el grupo de seguridad.
 
-Conservar los parámetros de timeout/retry/lease de [.env.example](../.env.example). `LEASE_MS` debe superar tres timeouts de integración. Credenciales distintas para local y nube. La herramienta `npm run seed` corre desde fuentes con Node/tsx y `.env` privado; los bundles de producción no incluyen una interfaz de seed. Los usuarios existentes no cambian de contraseña al repetir seed: usa un procedimiento explícito de rotación.
+## Ubuntu: dependencias y compilación
 
-El frontend contiene una CSP con `REPLACE_WITH_AWS_API_HOST`: antes de publicar, incorporar el origen real en `frontend/dist/staticwebapp.config.json`, además de `VITE_API_URL`. Son dos configuraciones distintas. El workflow de preflight genera un artefacto con ambas y comprueba que no queden marcadores. CORS y CSP deben admitir el mismo origen API, y ambos sitios deben usar HTTPS para evitar contenido mixto.
+Requiere Git, **Node.js 22.16 o superior** y npm. No requiere Express, MongoDB local ni Docker: Fastify y el driver MongoDB vienen en las dependencias. Desde la raíz del repositorio:
 
-## Costos y límites consultados el 16 de octubre de 2026
+Si falta npm, instale Node 22 con el instalador publicado por [nvm](https://github.com/nvm-sh/nvm#installing-and-updating), desde una terminal SSH de Ubuntu:
 
-La selección final de región, tamaño, presupuesto y cuenta queda para la preparación de ambientes. Estos datos públicos no acreditan beneficios ni saldo de la cuenta del usuario.
+```bash
+sudo apt-get update
+sudo apt-get install -y curl ca-certificates
+curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.8/install.sh -o /tmp/nvm-install.sh
+bash /tmp/nvm-install.sh
+export NVM_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/nvm"
+[ -s "$HOME/.nvm/nvm.sh" ] && export NVM_DIR="$HOME/.nvm"
+. "$NVM_DIR/nvm.sh"
+nvm install 22
+nvm alias default 22
+node --version
+npm --version
+```
 
-| Servicio            | Dato verificado                                                                                   | Consecuencia para este proyecto                                                     |
-| ------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| Azure SWA Free      | 100 GB de transferencia por suscripción; sin SLA; al superar cuota no sirve el sitio              | Adecuado para demostración académica, no prueba una disponibilidad de 99,5 %        |
-| Atlas Free          | 0,5 GB incluyendo índices, 500 conexiones y 100 operaciones/s                                     | Los 200/500 VUs pueden alcanzar throttling antes que el límite de la API            |
-| EC2 T3              | `t3.small`, 2 vCPU/2 GiB, Linux/Unix, US East Northern Virginia: USD 0,0209/h en la tabla pública | 20 h ≈ USD 0,42 de cómputo; 730 h ≈ USD 15,26; confirmar región/OS antes de aprobar |
-| IPv4 AWS            | USD 0,005/h por dirección pública                                                                 | Una IP: 20 h ≈ USD 0,10; 730 h ≈ USD 3,65, salvo créditos/beneficios aplicables     |
-| AWS Free Tier nuevo | Hasta USD 200 de créditos y plan gratuito de hasta 6 meses, sujeto a condiciones                  | No asumir elegibilidad ni desplegar basándose en “gratis”                           |
+Después, desde la carpeta del proyecto:
 
-Al cálculo EC2 hay que sumar EBS, transferencia, logs, posibles créditos CPU Unlimited y DNS; parar la VM no elimina necesariamente almacenamiento o IPv4 reservada. Para carga sostenida conviene revisar créditos CPU y costo antes de elegir T3. No se ha aprobado gasto, contratado capacidad ni prometido que Atlas Free cumpla la carga.
+```bash
+node --version
+npm ci
+npm run atlas:init
+chmod 600 .env.atlas
+nano .env.atlas
+npm run atlas:check
+```
 
-Fuentes oficiales: [Azure SWA precios](https://azure.microsoft.com/en-us/pricing/details/app-service/static/), [Atlas Free límites](https://www.mongodb.com/docs/atlas/reference/free-shared-limitations/), [EC2 T3](https://aws.amazon.com/ec2/instance-types/t3/), [EC2 On-Demand](https://aws.amazon.com/ec2/pricing/on-demand/), [IPv4 VPC](https://aws.amazon.com/vpc/pricing/), [AWS Free Tier](https://aws.amazon.com/free/free-tier-faqs/). Revalidar precios al preparar el ambiente.
+`atlas:init` conserva un archivo existente; en un archivo nuevo genera secretos privados y deja la URI pendiente de completar. No crea usuarios ni recursos de Atlas. `atlas:check` consulta Atlas sin escribir; no sustituye un recorrido funcional. Configure la URI y permisos según [ATLAS](ATLAS.md) antes de continuar.
 
-## Trabajo posterior al punto de corte, sin ejecutar ahora
+Después de confirmar ambas bases de pruebas, el seed **escribe índices y usuarios demo ausentes**. No cambia contraseñas existentes ni borra datos:
 
-1. Confirmar cuentas/suscripciones, región, créditos, presupuesto máximo y responsables; decidir tamaño EC2 sin activar recursos todavía.
-2. Preparar Atlas con datos exclusivamente ficticios, bases separadas, usuarios limitados, TLS y lista de acceso acotada; definir backup/export y retención.
-3. Preparar AWS: VM, acceso administrativo limitado, Docker, supervisión de tres procesos, firewall, HTTPS, DNS y secretos externos al repositorio. Abrir solo los puertos necesarios; MongoDB no se expone desde la VM.
-4. Preparar Azure SWA Free y su origen; construir web con API HTTPS conocida, ajustar CSP y CORS, verificar navegación directa y preflight del navegador.
-5. Crear configuración protegida en GitHub para cada ambiente. Ejecutar primero CI real; conectar despliegue con permisos mínimos solo cuando exista infraestructura aprobada. El workflow actual **no despliega**.
-6. Publicar imágenes/versiones de forma controlada, seed ficticio, smoke HTTP/autenticación, recorrido E2E desde Azure y reinicio de API/worker/mocks para comprobar persistencia.
-7. Ejecutar los dos escenarios [de rendimiento](pruebas/RENDIMIENTO.md), registrar costo y límites, luego desactivar/eliminar los recursos de prueba conforme al plan aprobado.
+```bash
+npm run seed:atlas
+npm run build --workspace backend
+npm run build --workspace mocks
+```
 
-## Rollback y aceptación posterior
+`seed:atlas` ejecuta primero la comprobación de Atlas y solo continúa si pasa. Para una primera prueba, ejecute los tres comandos de producción de la tabla en terminales separadas. No use `dev:atlas` como servicio de producción: inicia procesos de desarrollo, incluido Vite; Azure recibirá el build estático del frontend.
 
-Conservar la imagen anterior por digest y el artefacto web anterior. Antes de cambiar versión, exportar las dos bases si la prueba requiere preservar datos. Volver a la imagen anterior solo si el esquema es compatible; detener worker antes de una restauración y reanudar con leases expirados. Un rollback de frontend no revierte MongoDB. Registrar versión, hora, causa, copia utilizada y validación de recuperación.
+Los bundles mantienen dependencias externas: conserve las dependencias instaladas en el monorepo y el lockfile. La instalación y compilación requieren dependencias de desarrollo; no ejecute inicialmente `npm ci --omit=dev`.
 
-La aceptación remota exige URLs HTTPS reales, login autorizado, crear solicitud, dos financieras diferenciadas, estados/ofertas, aceptación, auditoría, rechazo de permisos incorrectos, callback HMAC y recuperación tras reinicio. Hasta documentar esas pruebas, el estado es **no desplegado / no verificado en proveedores**.
+## Supervisión y entrada HTTPS en EC2
+
+Para mantener los procesos al cerrar SSH, configure tres servicios de un supervisor, por ejemplo systemd: API, worker y mocks. Deben usar usuario de sistema sin privilegios, directorio raíz del proyecto, ruta absoluta al ejecutable Node, archivo privado de configuración y reinicio ante fallo. Los nombres y rutas exactos dependen de la instalación; todavía no se han creado unidades ni validado reinicios en EC2.
+
+Use un reverse proxy para terminar HTTPS y reenviar la API a `127.0.0.1:4000`. API y mocks actualmente escuchan en `0.0.0.0`; restrinja sus puertos con firewall y grupo de seguridad. Publique únicamente los puertos necesarios para HTTPS/HTTP y limite SSH al acceso administrativo. Mantenga `4001` privado: los mocks se comunican con la API por loopback dentro de EC2, sin necesitar un dominio público propio. Atlas requiere salida de red, no abrir un puerto MongoDB entrante en EC2.
+
+La API expone `/health/ready` para readiness; los mocks, `/health/live`. El worker exige supervisión del proceso y seguimiento de trabajos pendientes/dead, además de comprobar que la API responda.
+
+## Configuración privada del backend
+
+| Variable             | Valor o criterio para esta ruta                                                  |
+| -------------------- | -------------------------------------------------------------------------------- |
+| `MONGODB_URI`        | URI privada Atlas con TLS; nunca incorporarla al frontend                        |
+| `DB_NAME`            | `credito_test`; los mocks añaden `_mocks` automáticamente                        |
+| `JWT_SECRET`         | Aleatorio, mínimo 32 caracteres                                                  |
+| `WEBHOOK_SECRET`     | Mismo secreto HMAC en API y mocks; independiente del JWT                         |
+| `MOCK_SECRET`        | Mismo secreto de integración en API/worker y mocks                               |
+| `DEMO_PASSWORD`      | Solo inicialización de usuarios demo; mínimo 12 caracteres                       |
+| `MOCK_URL`           | `http://127.0.0.1:4001`, procesos en la misma EC2                                |
+| `CALLBACK_URL`       | `http://127.0.0.1:4000`, mismo valor para API/worker y mocks                     |
+| `CORS_ORIGINS`       | Origen HTTPS exacto del frontend Azure, sin comodín                              |
+| `PORT` / `MOCK_PORT` | `4000` / `4001`, privados detrás de controles de red                             |
+| `RATE_LIMIT`         | Inicialmente 120 por minuto/identidad; no alterar para aparentar mayor capacidad |
+
+Mantenga los tiempos de [.env.example](../.env.example); `LEASE_MS` debe superar tres timeouts de integración. `.env.atlas` está excluido de Git. Las variables exportadas en la terminal prevalecen sobre `--env-file`; evite que sustituyan inadvertidamente la configuración prevista.
+
+## Azure: construir únicamente el frontend
+
+El destino previsto es Azure Static Web Apps; no se ha creado ni publicado un recurso Azure en esta preparación. Desde la raíz del repositorio, en un entorno de compilación con Node y npm:
+
+```bash
+npm ci
+export VITE_API_URL='https://REPLACE_WITH_AWS_API_HOST'
+npm run build --workspace frontend
+```
+
+Reemplace el marcador por el **origen HTTPS real de la API**, sin añadir `/v1`: las rutas ya lo incluyen en el cliente. `VITE_API_URL` es público y queda incorporado al JavaScript al compilar. Nunca coloque URI Atlas, contraseñas ni secretos en variables `VITE_*`.
+
+El resultado que se publica es `frontend/dist`, no el repositorio completo. Si posteriormente se configura una acción Azure para publicar un artefacto ya construido, su `app_location` corresponde a `frontend/dist` con `skip_app_build: true`, y no se configura una API de Azure Functions: Fastify vive en AWS. Esta es una indicación futura, no un workflow desplegado. Consulte [configuración de compilación de Azure](https://learn.microsoft.com/en-us/azure/static-web-apps/build-configuration).
+
+Antes de publicar, sustituya en `frontend/dist/staticwebapp.config.json` el marcador `https://REPLACE_WITH_AWS_API_HOST` de `connect-src` por ese mismo origen API. Compruebe que no quede el marcador y que el archivo esté en la raíz del artefacto. [Azure documenta esa ubicación y las cabeceras globales](https://learn.microsoft.com/en-us/azure/static-web-apps/configuration).
+
+Son tres ajustes distintos:
+
+1. `VITE_API_URL` determina a dónde llama el cliente.
+2. CSP `connect-src`, servida por Azure, permite al navegador conectar a la API.
+3. `CORS_ORIGINS`, aplicado por Fastify, admite el origen del frontend Azure.
+
+Ambos extremos públicos deben usar HTTPS. El proxy Vite de desarrollo no existe en el sitio estático publicado. El [preflight existente](../.github/workflows/cloud-preflight.yml) prepara un build y ajusta CSP; no provisiona ni despliega. [CI/CD](CICD.md) describe el pipeline actual.
+
+## Pendientes y aceptación remota
+
+1. Transferir o configurar de forma privada `.env.atlas` en EC2 y comprobar desde esa instancia el acceso a las dos bases. El usuario de aplicación, los permisos y un flujo con Atlas ya se verificaron desde desarrollo; consulte [la evidencia](pruebas/ATLAS.md).
+2. Conservar la inicialización demo existente, construir API/worker/mocks en Ubuntu y confirmar Node, cuentas de acceso y SHA publicado.
+3. Configurar supervisión, reverse proxy y HTTPS en EC2; validar reinicio y recuperación de trabajos persistidos.
+4. Preparar el destino Azure y publicar solo el frontend, con API HTTPS, CSP y CORS coherentes.
+5. Validar desde navegador: login, permisos por rol, cliente `DEMO-`, solicitud, dos financieras, ofertas, aceptación y auditoría. Confirmar HMAC y recuperación tras reinicio.
+6. Registrar por separado URLs reales, resultados y pendientes. Las pruebas completas [de rendimiento](pruebas/RENDIMIENTO.md) se ejecutan deliberadamente y se documentan; no se deducen de un smoke ni de Atlas Free.
+
+Esta actualización documental no crea recursos, DNS, reservas ni despliegues; no demuestra disponibilidad ni autoriza gastos nuevos. Revise región, capacidad y precios en las consolas antes de contratar cambios: las estimaciones históricas del corte anterior no son una cotización actual.
+
+## Versiones y rollback
+
+Conserve el SHA Git, lockfile y artefactos compilados de la versión anterior, incluido el frontend. Antes de modificar datos, acuerde un export/backup de las dos bases si deben preservarse. Volver a una versión de código solo es seguro si sigue siendo compatible con el esquema; detenga el worker antes de una restauración y reanúdelo considerando los leases. Un rollback de frontend no revierte Atlas.
+
+Registre fecha, versión, causa, copia utilizada y validación posterior. Hasta completar las comprobaciones remotas correspondientes, declare cada componente como preparado, configurado o verificado según evidencia, sin atribuir un despliegue exitoso al conjunto.

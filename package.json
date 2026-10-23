@@ -13,7 +13,11 @@
   },
   "scripts": {
     "dev": "node --env-file=.env --import tsx scripts/dev.ts",
+    "dev:atlas": "node --env-file=.env.atlas --import tsx scripts/dev.ts .env.atlas",
     "seed": "node --env-file=.env --import tsx backend/src/seed.ts",
+    "seed:atlas": "npm run atlas:check && node --env-file=.env.atlas --import tsx backend/src/seed.ts",
+    "atlas:init": "node --import tsx scripts/init-atlas.ts",
+    "atlas:check": "node --env-file=.env.atlas --import tsx scripts/check-atlas.ts",
     "build": "npm run build --workspaces",
     "typecheck": "tsc --noEmit && npm run typecheck --workspaces",
     "lint": "eslint backend frontend mocks shared scripts tests playwright.config.ts --max-warnings 0",

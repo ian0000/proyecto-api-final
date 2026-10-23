@@ -2,6 +2,8 @@
 
 La solución es un monolito modular TypeScript con procesos API y worker separados, una web React y un servidor mock independiente. MongoDB conserva solicitudes y trabajos embebidos: crear una solicitud y sus trabajos es una sola escritura atómica. Esto evita agregar Redis o una transacción entre cola y base para el MVP.
 
+La web y el backend son componentes independientes dentro de un monorepo. La ruta vigente utiliza frontend estático en Azure, API/worker/mocks en EC2 Ubuntu con Node.js directamente y persistencia en Atlas. El término monolito modular se refiere al backend, no a un despliegue único de web y servidor.
+
 ## Estilo y componentes
 
 | Alternativa             | Ventaja para el caso                                                       | Costo/limitación                                                   | Decisión                                         |
@@ -17,17 +19,17 @@ La comparación evalúa la simulación actual; no afirma qué tecnologías usan 
 flowchart LR
   U[Asesor / Supervisor / Administrador] --> WEB[React + Vite]
   WEB -->|REST JSON / JWT /v1| API[Fastify API]
-  API -->|una escritura: datos + trabajos| DB[(MongoDB local)]
+  API -->|una escritura: datos + trabajos| DB[(MongoDB Atlas)]
   W[Worker Node] -->|lease / CAS / backoff / DLQ| DB
   W --> A[Puerto Adapter]
   A -->|JSON + clave mock| P[Mock Pichincha]
   A -->|XML + polling| B[Mock Pacífico]
   P -->|webhook HMAC| API
-  P --> MD[(Base mock separada)]
+  P --> MD[(Base mock separada en Atlas)]
   B --> MD
 ```
 
-El destino futuro es frontend en Azure, API/worker/mocks en AWS y datos en Atlas; este diagrama describe ejecución local. No se ha preparado ni verificado infraestructura remota. La [guía de despliegue](DEPLOYMENT.md) contiene la frontera de siguiente etapa.
+La conexión y un flujo funcional con Atlas se verificaron desde la computadora de desarrollo el 22 de octubre de 2026. Los despliegues de los procesos en AWS y de la web en Azure requieren sus propias comprobaciones. Consulte [ATLAS](ATLAS.md) y la [guía de despliegue](DEPLOYMENT.md).
 
 ## Flujo asíncrono
 
