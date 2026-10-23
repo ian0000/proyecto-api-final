@@ -58,6 +58,33 @@ Puede cerrar las terminales SSH después de las comprobaciones. Una prueba poste
 sudo -n systemctl disable --now fabrica-api fabrica-worker fabrica-mocks
 ```
 
+## Abrir Swagger desde Windows mediante SSH
+
+Con la API activa puede consultar `/docs/` sin publicar su puerto. En Ubuntu, actualice el contrato y reinicie la API (el contrato se carga al arrancar):
+
+```bash
+cd ~/proyecto-api-final
+git pull --ff-only origin main
+sudo -n systemctl restart fabrica-api
+curl -i http://127.0.0.1:4000/health/ready
+```
+
+En **PowerShell de su computadora**, sustituya la ruta por su archivo privado `.pem` y la dirección por la IP pública vigente de EC2:
+
+```powershell
+ssh -i "C:\ruta\tu-clave.pem" -N -o ExitOnForwardFailure=yes -L 127.0.0.1:4400:127.0.0.1:4000 ubuntu@IP_PUBLICA_EC2
+```
+
+Mantenga esa terminal abierta; que no aparezca un prompt al conectar es normal con `-N`. El puerto SSH 22 debe admitir la IP pública de su computadora; la regla de EC2 Instance Connect corresponde a otro origen. No comparta el `.pem` ni abra 4000/4001 al público. Consulte la [explicación de AWS sobre el reenvío local SSH](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-ssh-tunnel-local.html).
+
+Abra en el navegador de Windows:
+
+- Swagger: `http://127.0.0.1:4400/docs/`.
+- Contrato: `http://127.0.0.1:4400/openapi.json`.
+- Readiness: `http://127.0.0.1:4400/health/ready`.
+
+El contrato usa el servidor relativo `/`, de modo que **Try it out** utiliza el mismo origen del túnel. Pruebe primero `GET /health/live` y `GET /health/ready`. Para operaciones protegidas, ejecute `POST /v1/auth/login` con un usuario ficticio sembrado y su contraseña de demostración; copie únicamente el valor de `token` en **Authorize**. No use la contraseña de Atlas para iniciar sesión en la aplicación. Esto prueba acceso a través del túnel; no acredita HTTPS público ni el despliegue del frontend.
+
 ## Estado y siguiente paso
 
 Las unidades se preparan y revisan en el repositorio; su instalación, permanencia al cerrar SSH y recuperación tras reiniciar EC2 requieren evidencia de esa instancia. No se han ejecutado esos pasos desde la computadora de desarrollo.

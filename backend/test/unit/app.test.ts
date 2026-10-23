@@ -127,6 +127,7 @@ describe('HTTP controller units: Fastify.inject with service/store doubles, no s
     const contract = await app.inject('/openapi.json');
     expect(contract.statusCode).toBe(200);
     expect(contract.json().openapi).toBe('3.0.3');
+    expect(contract.json().servers[0].url).toBe('/');
     expect((await app.inject('/docs/')).statusCode).toBe(200);
   });
   it('authenticates against a salted hash, normalizes email and returns no hash', async () => {

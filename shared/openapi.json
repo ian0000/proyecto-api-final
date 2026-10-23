@@ -7,8 +7,8 @@
   },
   "servers": [
     {
-      "url": "http://localhost:4000",
-      "description": "Local"
+      "url": "/",
+      "description": "Mismo origen que la API (local, túnel SSH o proxy HTTPS)"
     }
   ],
   "tags": [

@@ -4,6 +4,8 @@ Fecha de corte documental: **16 de octubre de 2026**. Esta matriz describe el al
 
 ## Resolución de inconsistencias
 
+Actualización de RNF-01/RNF-19: Swagger utiliza el servidor relativo `/` para ejecutar operaciones desde su propio origen, incluso mediante túnel SSH; consulte [la guía de acceso](UBUNTU_SERVICES.md#abrir-swagger-desde-windows-mediante-ssh). Contrato validado y endpoint cubierto por prueba unitaria local. El acceso real por túnel desde Windows sigue pendiente de comprobar; no cambia el estado del portal público.
+
 | Fuente original                                                                          | Decisión actual y motivo                                                                                                                                  |
 | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Guayaquil, Originarsa y BPAC; fase1 interpreta BPAC como Pichincha, RF/RNF como Pacífico | Exactamente dos mocks: Banco Pichincha y Banco del Pacífico, por decisión explícita del prompt. No inferir identidades ni APIs reales a partir de BPAC.   |
