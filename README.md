@@ -33,6 +33,8 @@ La entrega del 16 de octubre de 2026 se validó localmente. Desde el 22 de octub
 
 Repositorio: [ian0000/proyecto-api-final](https://github.com/ian0000/proyecto-api-final).
 
+Para compartir API y Swagger desde la VM existente, siga [API pública con Nginx y HTTPS](docs/API_PUBLICA.md). Es una guía pendiente de ejecutar y verificar en EC2; un túnel a `127.0.0.1` no publica el servicio para otros usuarios.
+
 ## Requisitos de DEV con Atlas
 
 - Git, Node.js **22.16 o superior** y npm.

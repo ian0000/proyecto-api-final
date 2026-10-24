@@ -4,7 +4,9 @@ Fecha de corte documental: **16 de octubre de 2026**. Esta matriz describe el al
 
 ## Resolución de inconsistencias
 
-Actualización de RNF-01/RNF-19: Swagger utiliza el servidor relativo `/` para ejecutar operaciones desde su propio origen, incluso mediante túnel SSH; consulte [la guía de acceso](UBUNTU_SERVICES.md#abrir-swagger-desde-windows-mediante-ssh). Contrato validado y endpoint cubierto por prueba unitaria local. El acceso real por túnel desde Windows sigue pendiente de comprobar; no cambia el estado del portal público.
+Actualización de RNF-01/RNF-19: Swagger utiliza el servidor relativo `/` para ejecutar operaciones desde su propio origen, incluso mediante túnel SSH; consulte [la guía de acceso](UBUNTU_SERVICES.md#abrir-swagger-desde-windows-mediante-ssh). Contrato validado y endpoint cubierto por prueba unitaria local. En esta sesión se observó readiness y Swagger HTTP 200 desde Windows a través de SSH temporal por 443; ese acceso privado no cambia el estado del portal público.
+
+Preparación del 23 de octubre: [API pública](API_PUBLICA.md) incorpora plantillas Nginx, HTTPS con certificado de IP y renovación para la VM existente. Su ejecución, validación Nginx, emisión y acceso externo siguen pendientes; disponer de estos archivos no completa el portal público de RNF-19 ni acredita TLS desplegado.
 
 | Fuente original                                                                          | Decisión actual y motivo                                                                                                                                  |
 | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |

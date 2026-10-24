@@ -84,6 +84,8 @@ Los bundles mantienen dependencias externas: conserve las dependencias instalada
 
 ## Supervisión y entrada HTTPS en EC2
 
+La configuración concreta para compartir API y Swagger está en [API_PUBLICA](API_PUBLICA.md): Nginx, certificado de IP y renovación automática. Incluye plantillas y comprobaciones; no acredita publicación hasta observar su resultado en EC2 y desde otra computadora.
+
 Para mantener los procesos al cerrar SSH, use [el instalador de servicios Ubuntu](UBUNTU_SERVICES.md). Prepara tres unidades systemd con el usuario actual sin privilegios, la ruta absoluta de Node y `.env.atlas`, y configura reinicio ante fallo. Las unidades deben instalarse y comprobarse en EC2; disponer del script no acredita permanencia al cerrar SSH ni recuperación tras reiniciar la instancia.
 
 Use un reverse proxy para terminar HTTPS y reenviar la API a `127.0.0.1:4000`. API y mocks actualmente escuchan en `0.0.0.0`; restrinja sus puertos con firewall y grupo de seguridad. Publique únicamente los puertos necesarios para HTTPS/HTTP y limite SSH al acceso administrativo. Mantenga `4001` privado: los mocks se comunican con la API por loopback dentro de EC2, sin necesitar un dominio público propio. Atlas requiere salida de red, no abrir un puerto MongoDB entrante en EC2.
