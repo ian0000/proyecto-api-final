@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-23",
+  "api": "https://18.117.111.251",
+  "frontend": "https://thankful-pebble-0ac084b0f.4.azurestaticapps.net",
+  "preflight": {
+    "status": 204,
+    "allowedOrigin": "https://thankful-pebble-0ac084b0f.4.azurestaticapps.net"
+  },
+  "untrustedOriginAllowed": false,
+  "readinessStatus": 200,
+  "demoLoginStatus": 200,
+  "authenticatedListStatus": 200,
+  "scope": "HTTP remoto: CORS, readiness, login demo y consulta autenticada. No prueba visual ni escritura de solicitudes.",
+  "frontendDeployment": {
+    "commit": "02c48cfded7fdb0cb907d81b7da43b987747ddae",
+    "run": "https://github.com/ian0000/proyecto-api-final/actions/runs/40054075901",
+    "conclusion": "success",
+    "frontendTestsPassed": 9,
+    "httpStatus": 200,
+    "cspConnectSrc": "'self' https://18.117.111.251",
+    "bundle": "/assets/index-BEbPuKC0.js",
+    "bundleSha256": "6f58bc54f27f94522337bd77a40bccd0245420612d60a5dd1460d625b07c3ff0",
+    "matchesVerifiedLocalBundle": true
+  }
+}

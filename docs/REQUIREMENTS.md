@@ -6,7 +6,7 @@ Fecha de corte documental: **16 de octubre de 2026**. Esta matriz describe el al
 
 Actualización de RNF-01/RNF-19: Swagger utiliza el servidor relativo `/` para ejecutar operaciones desde su propio origen, incluso mediante túnel SSH; consulte [la guía de acceso](UBUNTU_SERVICES.md#abrir-swagger-desde-windows-mediante-ssh). Contrato validado y endpoint cubierto por prueba unitaria local. En esta sesión se observó readiness y Swagger HTTP 200 desde Windows a través de SSH temporal por 443; ese acceso privado no cambia el estado del portal público.
 
-Preparación del 23 de octubre: [API pública](API_PUBLICA.md) incorpora plantillas Nginx, HTTPS con certificado de IP y renovación para la VM existente. Su ejecución, validación Nginx, emisión y acceso externo siguen pendientes; disponer de estos archivos no completa el portal público de RNF-19 ni acredita TLS desplegado.
+Preparación inicial del 23 de octubre: [API pública](API_PUBLICA.md) incorpora plantillas Nginx, HTTPS con certificado de IP y renovación para la VM existente. La continuación registrada en [AZURE](AZURE.md) comprobó posteriormente acceso público HTTPS de la API y del frontend, CSP, CORS, login demo y consulta autenticada. No se inspeccionó la emisión o renovación del certificado ni se completan los requisitos de portal para socios.
 
 | Fuente original                                                                          | Decisión actual y motivo                                                                                                                                  |
 | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -21,7 +21,7 @@ Preparación del 23 de octubre: [API pública](API_PUBLICA.md) incorpora plantil
 
 ## Requisitos funcionales
 
-Continuación del 23 de octubre: la API AWS indicada por el usuario respondió HTTP 200 por HTTPS en `/health/ready`. Se creó el recurso Azure Free y su página inicial respondió HTTP 200. El frontend dispone de build Azure que exige el origen HTTPS y genera CSP coherente. Build publicado actualizado, CORS remoto y flujo entre proveedores se verifican por separado en [AZURE](AZURE.md); esta evidencia puntual no completa RNF-04, RNF-17 ni RNF-19.
+Continuación del 23 de octubre: se publicaron frontend Azure Free y build específico con CSP coherente. Se verificaron HTTPS, CORS exacto, readiness AWS, login demo y consulta autenticada. [AZURE](AZURE.md) conserva evidencia y límites: sin recorrido visual completo ni mediciones de carga/SLA; RNF-04, RNF-17 y RNF-19 permanecen parciales.
 
 | ID    | Requisito original                                                      | Estado    | Implementación y brecha                                                                                                                                   |
 | ----- | ----------------------------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -48,27 +48,27 @@ Continuación del 23 de octubre: la API AWS indicada por el usuario respondió H
 
 ## Requisitos no funcionales
 
-| ID     | Requisito original                                   | Estado    | Implementación y brecha                                                                                                                        |
-| ------ | ---------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| RNF-01 | OpenAPI 3.x, API-First, `/v1`                        | Completo  | `shared/openapi.json`, schemas consumidos por rutas, Swagger UI y validador. Resultados de coherencia en pruebas.                              |
-| RNF-02 | Gateway, Adapter y modelo canónico                   | Parcial   | Fastify como entrada y adaptadores; gateway independiente no necesario localmente. Capas del borde cloud pendientes.                           |
-| RNF-03 | OAuth/OIDC y almacén de secretos                     | Parcial   | JWT HS256 propio, scrypt y `.env` local; sin OAuth/OIDC ni secret manager cloud.                                                               |
-| RNF-04 | TLS, cifrado en reposo y logs protegidos             | Parcial   | Redacción de auth/cookie/firma; solo ficticios. HTTP y Mongo local; TLS/cifrado/gestión de claves cloud sin verificar.                         |
-| RNF-05 | Roles y alcance por agencia                          | Completo  | Filtro por agencia; administrador global; supervisor lectura. No equivale a flujo aprobación RF-13.                                            |
-| RNF-06 | Cumplimiento LOPDP integral                          | Parcial   | Consentimiento y finalidad académica; retención, derechos, eliminación y revisión jurídica pendientes. No se declara certificación legal.      |
-| RNF-07 | 99,5 % y aislar caída de financiera                  | Parcial   | Circuito y jobs por financiera; SLA mensual requiere operación y monitoreo prolongados.                                                        |
-| RNF-08 | p95 <2 s y envío asíncrono 202                       | Parcial   | 202 y worker persistente verificados. Smoke local aprobado; p95 con la carga requerida pendiente.                                              |
-| RNF-09 | Backoff, circuit breaker, timeout y DLQ              | Completo  | Worker con leases, 5 intentos configurables, backoff, dead y reactivación admin. Regresiones de recuperación y concurrencia aprobadas.         |
-| RNF-10 | Idempotencia de POST                                 | Parcial   | Crear, aceptar y desistir idempotentes; reactivación admin no tiene replay por clave. Mocks deduplican submissions y decisiones.               |
-| RNF-11 | Escalamiento horizontal ante picos                   | Parcial   | Lease/CAS permite reclamar entre workers; escalamiento y capacidad multirréplica no medidos.                                                   |
-| RNF-12 | Correlación, logs, métricas por financiera y alertas | Parcial   | Correlation ID, logs estructurados y métricas proceso/cola; sin series por financiera ni alertas.                                              |
-| RNF-13 | Auditoría inmutable y retención                      | Parcial   | Eventos anexados sin rutas de edición; acceso admin DB puede alterarlos. Retención/inmutabilidad pendientes.                                   |
-| RNF-14 | JSON, Problem Details, ISO 8601, USD                 | Completo  | JSON canónico, `application/problem+json`, UTC y centavos USD en contrato. XML solo tras adaptador.                                            |
-| RNF-15 | Nueva financiera sin cambiar contrato público        | Parcial   | Interfaz Adapter desacopla protocolo; enum de bancos y registros requieren cambios de código/esquema compatibles. No es plug-and-play runtime. |
-| RNF-16 | Rate limit por consumidor y financiera               | Parcial   | Por usuario/IP en API y login; estado del limitador local al proceso. Sin cupos por proveedor ni coordinación distribuida.                     |
-| RNF-17 | Tests, cobertura, CI/CD y ambientes separados        | Parcial   | 102 pruebas unitarias con gate >=85 % aprobado; integración y CI real verificados. CD y ambientes cloud pendientes.                            |
-| RNF-18 | Responsive y registro <=5 min                        | Parcial   | UI adaptable y mensajes comprensibles; cronometraje y evaluación usuarios pendientes.                                                          |
-| RNF-19 | Portal navegable, ejemplos, sandbox y onboarding     | Parcial   | Swagger UI, ejemplo y mocks locales; sin portal público ni autoservicio para socios. Ver guía Adapter en arquitectura.                         |
-| RNF-20 | Backup diario, RPO <=24 h, RTO <=4 h                 | Pendiente | Volumen local persistente no es respaldo. Falta política, backup/restauración y ejercicio medido.                                              |
+| ID     | Requisito original                                   | Estado    | Implementación y brecha                                                                                                                              |
+| ------ | ---------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| RNF-01 | OpenAPI 3.x, API-First, `/v1`                        | Completo  | `shared/openapi.json`, schemas consumidos por rutas, Swagger UI y validador. Resultados de coherencia en pruebas.                                    |
+| RNF-02 | Gateway, Adapter y modelo canónico                   | Parcial   | Fastify como entrada y adaptadores; gateway independiente no necesario localmente. Capas del borde cloud pendientes.                                 |
+| RNF-03 | OAuth/OIDC y almacén de secretos                     | Parcial   | JWT HS256 propio, scrypt y `.env` local; sin OAuth/OIDC ni secret manager cloud.                                                                     |
+| RNF-04 | TLS, cifrado en reposo y logs protegidos             | Parcial   | TLS público AWS/Azure comprobado y redacción de auth/cookie/firma. Cifrado en reposo, gestión de claves y protección operativa de logs sin auditar.  |
+| RNF-05 | Roles y alcance por agencia                          | Completo  | Filtro por agencia; administrador global; supervisor lectura. No equivale a flujo aprobación RF-13.                                                  |
+| RNF-06 | Cumplimiento LOPDP integral                          | Parcial   | Consentimiento y finalidad académica; retención, derechos, eliminación y revisión jurídica pendientes. No se declara certificación legal.            |
+| RNF-07 | 99,5 % y aislar caída de financiera                  | Parcial   | Circuito y jobs por financiera; SLA mensual requiere operación y monitoreo prolongados.                                                              |
+| RNF-08 | p95 <2 s y envío asíncrono 202                       | Parcial   | 202 y worker persistente verificados. Smoke local aprobado; p95 con la carga requerida pendiente.                                                    |
+| RNF-09 | Backoff, circuit breaker, timeout y DLQ              | Completo  | Worker con leases, 5 intentos configurables, backoff, dead y reactivación admin. Regresiones de recuperación y concurrencia aprobadas.               |
+| RNF-10 | Idempotencia de POST                                 | Parcial   | Crear, aceptar y desistir idempotentes; reactivación admin no tiene replay por clave. Mocks deduplican submissions y decisiones.                     |
+| RNF-11 | Escalamiento horizontal ante picos                   | Parcial   | Lease/CAS permite reclamar entre workers; escalamiento y capacidad multirréplica no medidos.                                                         |
+| RNF-12 | Correlación, logs, métricas por financiera y alertas | Parcial   | Correlation ID, logs estructurados y métricas proceso/cola; sin series por financiera ni alertas.                                                    |
+| RNF-13 | Auditoría inmutable y retención                      | Parcial   | Eventos anexados sin rutas de edición; acceso admin DB puede alterarlos. Retención/inmutabilidad pendientes.                                         |
+| RNF-14 | JSON, Problem Details, ISO 8601, USD                 | Completo  | JSON canónico, `application/problem+json`, UTC y centavos USD en contrato. XML solo tras adaptador.                                                  |
+| RNF-15 | Nueva financiera sin cambiar contrato público        | Parcial   | Interfaz Adapter desacopla protocolo; enum de bancos y registros requieren cambios de código/esquema compatibles. No es plug-and-play runtime.       |
+| RNF-16 | Rate limit por consumidor y financiera               | Parcial   | Por usuario/IP en API y login; estado del limitador local al proceso. Sin cupos por proveedor ni coordinación distribuida.                           |
+| RNF-17 | Tests, cobertura, CI/CD y ambientes separados        | Parcial   | Cobertura local y CI real verificados; CD frontend Azure aprobado. Automatización de despliegue backend y separación formal de ambientes pendientes. |
+| RNF-18 | Responsive y registro <=5 min                        | Parcial   | UI adaptable y mensajes comprensibles; cronometraje y evaluación usuarios pendientes.                                                                |
+| RNF-19 | Portal navegable, ejemplos, sandbox y onboarding     | Parcial   | Swagger UI, ejemplo y mocks locales; sin portal público ni autoservicio para socios. Ver guía Adapter en arquitectura.                               |
+| RNF-20 | Backup diario, RPO <=24 h, RTO <=4 h                 | Pendiente | Volumen local persistente no es respaldo. Falta política, backup/restauración y ejercicio medido.                                                    |
 
 Los requisitos parciales y pendientes se mantienen en [BACKLOG](BACKLOG.md). Las fuentes intactas y sus SHA-256 están en [manifest.json](fuentes/manifest.json).

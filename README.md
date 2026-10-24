@@ -33,7 +33,7 @@ La entrega del 16 de octubre de 2026 se validó localmente. Desde el 22 de octub
 
 Repositorio: [ian0000/proyecto-api-final](https://github.com/ian0000/proyecto-api-final).
 
-Para compartir API y Swagger desde la VM existente, siga [API pública con Nginx y HTTPS](docs/API_PUBLICA.md). Es una guía pendiente de ejecutar y verificar en EC2; un túnel a `127.0.0.1` no publica el servicio para otros usuarios.
+El 23 de octubre se publicó el [frontend en Azure](https://thankful-pebble-0ac084b0f.4.azurestaticapps.net/) conectado a la API HTTPS de AWS. Se comprobaron CSP, CORS, login demo y consulta autenticada mediante HTTP. La evidencia y sus límites están en [AZURE](docs/AZURE.md). La configuración de la entrada pública del servidor se describe en [API pública con Nginx y HTTPS](docs/API_PUBLICA.md).
 
 ## Requisitos de DEV con Atlas
 

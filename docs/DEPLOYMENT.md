@@ -112,7 +112,7 @@ Mantenga los tiempos de [.env.example](../.env.example); `LEASE_MS` debe superar
 
 ## Azure: construir únicamente el frontend
 
-La continuación del 23 de octubre está en [AZURE](AZURE.md): API AWS indicada y comprobada en `https://18.117.111.251`, build específico y publicación frontend en preparación. La publicación Azure requiere su propia verificación. Desde la raíz del repositorio, en un entorno de compilación con Node y npm:
+La continuación del 23 de octubre está en [AZURE](AZURE.md): API AWS comprobada en `https://18.117.111.251`, frontend publicado en Azure y verificaciones remotas de CSP, CORS, login demo y consulta autenticada. Esos resultados puntuales no acreditan carga, recuperación ni SLA. Desde la raíz del repositorio, en un entorno de compilación con Node y npm:
 
 ```bash
 npm ci

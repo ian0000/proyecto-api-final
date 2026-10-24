@@ -22,7 +22,7 @@ Vite incorpora la URL al compilar: cambiar una variable después de publicar req
 
 ## Publicación
 
-El recurso `fabrica-credito-web` se creó desde VS Code en el grupo `rg-fabrica-credito-web`, plan Free y región East US 2. La dirección asignada por Azure es [Fábrica de Crédito](https://thankful-pebble-0ac084b0f.4.azurestaticapps.net/); la página respondió HTTP 200 por HTTPS. La conexión completa con AWS todavía requiere comprobar el build actualizado y habilitar CORS.
+El recurso `fabrica-credito-web` se creó desde VS Code en el grupo `rg-fabrica-credito-web`, plan Free y región East US 2. La dirección asignada por Azure es [Fábrica de Crédito](https://thankful-pebble-0ac084b0f.4.azurestaticapps.net/). El build específico quedó publicado y se verificaron HTTP 200, CSP y CORS con AWS; el acceso demo y la consulta autenticada también respondieron HTTP 200.
 
 El [workflow Azure frontend](../.github/workflows/azure-static-web-apps-thankful-pebble-0ac084b0f.yml) instala desde la raíz con Node 22, comprueba lint/pruebas del frontend y construye únicamente la web. `VITE_API_URL` se aplica solo al build. Publica en `main` cuando cambia frontend, compartidos, dependencias o ese workflow; también admite ejecución manual. El secreto de publicación quedó gestionado por la integración Azure/GitHub; no se extrajo su valor.
 
@@ -54,7 +54,7 @@ curl -fsS http://127.0.0.1:4000/health/ready
 
 Detenerse si un comando falla. El [script](../scripts/ubuntu/configure-frontend-cors.js) agrega el origen exacto a `CORS_ORIGINS` en `.env.atlas`, conserva los demás orígenes explícitos y una copia privada anterior, y no imprime secretos. No compila ni modifica el código del backend. Reiniciar únicamente el servicio API según [UBUNTU_SERVICES](UBUNTU_SERVICES.md). El archivo privado local no cambia EC2.
 
-La comprobación externa inicial recibió HTTP 204 al preflight, pero **sin** `access-control-allow-origin`: ese resultado todavía bloquea la conexión desde Azure. El acceso SSH al puerto 22 desde la computadora terminó por timeout; el usuario eligió aplicar el cambio desde la terminal de AWS.
+La comprobación externa inicial recibió HTTP 204 al preflight, pero **sin** `access-control-allow-origin`. El acceso SSH al puerto 22 desde la computadora terminó por timeout; el usuario aplicó el bloque anterior desde la terminal de AWS y comunicó que terminó sin errores. La comprobación posterior confirmó el origen Azure permitido y un origen ajeno rechazado; no se inspeccionó directamente el archivo privado de EC2.
 
 ## Verificación y límites
 
@@ -63,4 +63,19 @@ La comprobación externa inicial recibió HTTP 204 al preflight, pero **sin** `a
 - Abrir la web y comprobar login con una cuenta demo; después recorrer una solicitud ficticia para acreditar la integración completa.
 - Un sitio Azure creado, un build local o readiness de AWS no prueban por sí solos esa integración.
 
-Estado de esta continuación: recurso creado y página inicial Azure HTTP 200; build específico actualizado en despliegue; ajuste remoto CORS y recorrido entre proveedores pendientes de verificación. El primer workflow ajustado falló porque la URL AWS también se aplicó a las pruebas; se corrigió limitándola al paso de build. Ese fallo permanece visible en GitHub y no se describe como una prueba aprobada.
+### Resultado observado el 23 de octubre de 2026
+
+| Comprobación                                                                                                    | Resultado                                                                       |
+| --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| [Despliegue Azure del commit `02c48cf`](https://github.com/ian0000/proyecto-api-final/actions/runs/40054075901) | Success: lint, 9 pruebas web, build y publicación                               |
+| Página pública Azure                                                                                            | HTTP 200 por HTTPS                                                              |
+| CSP servida por Azure                                                                                           | `connect-src 'self' https://18.117.111.251`                                     |
+| JavaScript publicado                                                                                            | Contiene el origen AWS y coincide por SHA-256 con el artefacto local verificado |
+| Preflight de login desde el origen Azure                                                                        | HTTP 204; `access-control-allow-origin` coincide exactamente                    |
+| Preflight desde un origen ajeno ficticio                                                                        | Sin permiso `access-control-allow-origin`                                       |
+| Readiness AWS                                                                                                   | HTTP 200 con permiso para Azure                                                 |
+| Login demo remoto y consulta autenticada de solicitudes                                                         | HTTP 200 y CORS correcto en ambos                                               |
+
+El [resumen de comprobaciones](pruebas/azure-conexion.json) conserva resultados sin contraseñas, tokens ni datos de solicitudes. Los HTTP a AWS enviaron explícitamente el encabezado `Origin`; no equivalen a una prueba visual de navegador. La vista previa de navegador no recibió autorización y no se sustituyó por otro mecanismo de control. No se repitió en esta continuación el flujo completo de crear/comparar/aceptar una solicitud, ni se acreditan SLA, carga o recuperación.
+
+El primer workflow ajustado falló porque la URL AWS también se aplicó a las pruebas; se corrigió limitándola al paso de build. Ese fallo permanece visible en GitHub y no se describe como una prueba aprobada.
