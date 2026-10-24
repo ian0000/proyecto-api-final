@@ -87,7 +87,7 @@ El contrato usa el servidor relativo `/`, de modo que **Try it out** utiliza el 
 
 ## Estado y siguiente paso
 
-Las [alertas Discord](DISCORD_ALERTS.md) utilizan un timer separado para detectar parada, recuperación y reinicios de estos tres servicios. El instalador del monitor no los detiene ni modifica sus unidades. Requiere configurar el webhook privado y verificar un mensaje real desde EC2; las pruebas locales no acreditan esa activación.
+Las [alertas Discord](DISCORD_ALERTS.md) utilizan un timer separado para detectar parada, recuperación y reinicios de estos tres servicios. El instalador del monitor no los detiene ni modifica sus unidades. El 24 de octubre de 2026 se comprobó el mensaje real de prueba en Discord y la captura de EC2 mostró el timer activo. La demostración remota de parada/recuperación y la persistencia después de reiniciar EC2 siguen pendientes.
 
 Las unidades se preparan y revisan en el repositorio; su instalación, permanencia al cerrar SSH y recuperación tras reiniciar EC2 requieren evidencia de esa instancia. No se han ejecutado esos pasos desde la computadora de desarrollo.
 
