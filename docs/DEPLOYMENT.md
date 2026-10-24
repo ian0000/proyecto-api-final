@@ -112,19 +112,19 @@ Mantenga los tiempos de [.env.example](../.env.example); `LEASE_MS` debe superar
 
 ## Azure: construir únicamente el frontend
 
-El destino previsto es Azure Static Web Apps; no se ha creado ni publicado un recurso Azure en esta preparación. Desde la raíz del repositorio, en un entorno de compilación con Node y npm:
+La continuación del 23 de octubre está en [AZURE](AZURE.md): API AWS indicada y comprobada en `https://18.117.111.251`, build específico y publicación frontend en preparación. La publicación Azure requiere su propia verificación. Desde la raíz del repositorio, en un entorno de compilación con Node y npm:
 
 ```bash
 npm ci
 export VITE_API_URL='https://REPLACE_WITH_AWS_API_HOST'
-npm run build --workspace frontend
+npm run build:azure --workspace frontend
 ```
 
 Reemplace el marcador por el **origen HTTPS real de la API**, sin añadir `/v1`: las rutas ya lo incluyen en el cliente. `VITE_API_URL` es público y queda incorporado al JavaScript al compilar. Nunca coloque URI Atlas, contraseñas ni secretos en variables `VITE_*`.
 
 El resultado que se publica es `frontend/dist`, no el repositorio completo. Si posteriormente se configura una acción Azure para publicar un artefacto ya construido, su `app_location` corresponde a `frontend/dist` con `skip_app_build: true`, y no se configura una API de Azure Functions: Fastify vive en AWS. Esta es una indicación futura, no un workflow desplegado. Consulte [configuración de compilación de Azure](https://learn.microsoft.com/en-us/azure/static-web-apps/build-configuration).
 
-Antes de publicar, sustituya en `frontend/dist/staticwebapp.config.json` el marcador `https://REPLACE_WITH_AWS_API_HOST` de `connect-src` por ese mismo origen API. Compruebe que no quede el marcador y que el archivo esté en la raíz del artefacto. [Azure documenta esa ubicación y las cabeceras globales](https://learn.microsoft.com/en-us/azure/static-web-apps/configuration).
+El build sustituye automáticamente en `frontend/dist/staticwebapp.config.json` el marcador de `connect-src` por ese mismo origen API. Compruebe que no quede el marcador y que el archivo esté en la raíz del artefacto. [Azure documenta esa ubicación y las cabeceras globales](https://learn.microsoft.com/en-us/azure/static-web-apps/configuration).
 
 Son tres ajustes distintos:
 

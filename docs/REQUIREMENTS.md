@@ -21,6 +21,8 @@ Preparación del 23 de octubre: [API pública](API_PUBLICA.md) incorpora plantil
 
 ## Requisitos funcionales
 
+Continuación del 23 de octubre: la API AWS indicada por el usuario respondió HTTP 200 por HTTPS en `/health/ready`. El frontend dispone de build Azure que exige el origen HTTPS y genera CSP coherente. Publicación Azure, CORS remoto y flujo entre proveedores se verifican por separado en [AZURE](AZURE.md); estos preparativos no completan RNF-04, RNF-17 ni RNF-19.
+
 | ID    | Requisito original                                                      | Estado    | Implementación y brecha                                                                                                                                   |
 | ----- | ----------------------------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | RF-01 | Registrar cliente natural/jurídico, cónyuge/garante, vehículo y crédito | Parcial   | Formulario y modelo cliente/vehículo/financiamiento; no persona jurídica, cónyuge/garante ni tipo de crédito. `shared/domain.ts`, `frontend/src/App.tsx`. |

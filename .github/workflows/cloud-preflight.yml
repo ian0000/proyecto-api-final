@@ -29,18 +29,17 @@ jobs:
       - run: npm run build
         env:
           VITE_API_URL: ${{ vars.API_ORIGIN }}
-      - name: Bind web CSP to the validated API origin in the generated artifact
+      - name: Verify web CSP matches the API origin in the generated artifact
         run: |
           node --input-type=module - <<'NODE'
-          import {readFileSync,writeFileSync} from 'node:fs';
+          import {readFileSync} from 'node:fs';
           const path='frontend/dist/staticwebapp.config.json';
           const config=JSON.parse(readFileSync(path,'utf8'));
           const csp=config.globalHeaders['Content-Security-Policy'];
-          if (!csp.includes('https://REPLACE_WITH_AWS_API_HOST')) throw new Error('Expected CSP template marker missing; review frontend policy');
-          config.globalHeaders['Content-Security-Policy']=csp.replace('https://REPLACE_WITH_AWS_API_HOST',process.env.API_ORIGIN);
+          const connect=csp.split(';').map(part=>part.trim()).find(part=>part.startsWith('connect-src '));
+          if (connect !== `connect-src 'self' ${process.env.API_ORIGIN}`) throw new Error('CSP does not match the configured API origin');
           const output=JSON.stringify(config,null,2);
           if (output.includes('REPLACE_WITH')) throw new Error('Unresolved cloud configuration marker');
-          writeFileSync(path,output+'\n');
           NODE
       - uses: actions/upload-artifact@v4
         with:
