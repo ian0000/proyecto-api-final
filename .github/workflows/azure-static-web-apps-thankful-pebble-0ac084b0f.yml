@@ -1,46 +1,47 @@
-name: Azure Static Web Apps CI/CD
+name: Azure frontend
 
 on:
+  workflow_dispatch:
   push:
-    branches:
-      - main
-  pull_request:
-    types: [opened, synchronize, reopened, closed]
-    branches:
-      - main
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - 'shared/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'eslint.config.*'
+      - '.github/workflows/azure-static-web-apps-thankful-pebble-0ac084b0f.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: azure-frontend-production
+  cancel-in-progress: true
 
 jobs:
-  build_and_deploy_job:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+  deploy:
     runs-on: ubuntu-latest
-    name: Build and Deploy Job
+    env:
+      VITE_API_URL: https://18.117.111.251
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          submodules: true
-          lfs: false
-      - name: Build And Deploy
-        id: builddeploy
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm exec eslint -- frontend --max-warnings 0
+      - run: npm run test --workspace frontend
+      - run: npm run build:azure --workspace frontend
+      - name: Publish frontend artifact to Azure
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_THANKFUL_PEBBLE_0AC084B0F }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
-          action: "upload"
-          ###### Repository/Build Configurations - These values can be configured to match your app requirements. ######
-          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
-          app_location: "/" # App source code path
-          api_location: "" # Api source code path - optional
-          output_location: "frontend/dist" # Built app content directory - optional
-          ###### End of Repository/Build Configurations ######
-
-  close_pull_request_job:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    name: Close Pull Request Job
-    steps:
-      - name: Close Pull Request
-        id: closepullrequest
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_THANKFUL_PEBBLE_0AC084B0F }}
-          action: "close"
+          action: upload
+          app_location: frontend/dist
+          api_location: ''
+          output_location: ''
+          skip_app_build: true
+          skip_api_build: true
