@@ -39,4 +39,6 @@ No se llama a esta plantilla “CD completado”: el trabajo de publicación se 
 
 ## Estado verificable
 
+Continuación Azure del 23 de octubre: [Azure frontend](../.github/workflows/azure-static-web-apps-thankful-pebble-0ac084b0f.yml) publica únicamente `frontend/dist` en el recurso Free creado desde VS Code. Comprueba lint, las pruebas web y el build específico con el origen AWS. No ejecuta ni despliega backend, worker o mocks. La URL y las comprobaciones remotas, incluida la brecha CORS, se registran en [AZURE](AZURE.md). Esta continuación amplía el límite cloud de la entrega anterior; no completa los pendientes de carga, SLA o recuperación.
+
 La configuración se validó también mediante una ejecución real de GitHub, independiente de los resultados locales. El repositorio público publicado es [ian0000/proyecto-api-final](https://github.com/ian0000/proyecto-api-final); push y primer run verificados en las evidencias de la entrega. Quedan pendientes de preparación cloud: permisos de ambiente, credenciales de despliegue, infraestructura, CD real y mediciones de nube. No hay un deploy exitoso ficticio ni un job vacío que lo afirme.

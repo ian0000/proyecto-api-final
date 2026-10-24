@@ -21,7 +21,7 @@ Preparación del 23 de octubre: [API pública](API_PUBLICA.md) incorpora plantil
 
 ## Requisitos funcionales
 
-Continuación del 23 de octubre: la API AWS indicada por el usuario respondió HTTP 200 por HTTPS en `/health/ready`. El frontend dispone de build Azure que exige el origen HTTPS y genera CSP coherente. Publicación Azure, CORS remoto y flujo entre proveedores se verifican por separado en [AZURE](AZURE.md); estos preparativos no completan RNF-04, RNF-17 ni RNF-19.
+Continuación del 23 de octubre: la API AWS indicada por el usuario respondió HTTP 200 por HTTPS en `/health/ready`. Se creó el recurso Azure Free y su página inicial respondió HTTP 200. El frontend dispone de build Azure que exige el origen HTTPS y genera CSP coherente. Build publicado actualizado, CORS remoto y flujo entre proveedores se verifican por separado en [AZURE](AZURE.md); esta evidencia puntual no completa RNF-04, RNF-17 ni RNF-19.
 
 | ID    | Requisito original                                                      | Estado    | Implementación y brecha                                                                                                                                   |
 | ----- | ----------------------------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
