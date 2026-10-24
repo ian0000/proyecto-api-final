@@ -39,6 +39,8 @@ No se llama a esta plantilla “CD completado”: el trabajo de publicación se 
 
 ## Estado verificable
 
+El job `ops` comprueba la sintaxis del instalador Discord y ejecuta `npm run test:ops` cuando el alcance incluye backend/cambios globales. `Required checks` también falla si ese job falla. Estas pruebas usan datos ficticios locales y no publican mensajes ni utilizan el webhook real; la activación se documenta en [DISCORD_ALERTS](DISCORD_ALERTS.md).
+
 Continuación Azure del 23 de octubre: [Azure frontend](../.github/workflows/azure-static-web-apps-thankful-pebble-0ac084b0f.yml) publica únicamente `frontend/dist` en el recurso Free creado desde VS Code. Comprueba lint, las pruebas web y el build específico con el origen AWS. No ejecuta ni despliega backend, worker o mocks. La URL y las comprobaciones remotas, incluida la corrección CORS, se registran en [AZURE](AZURE.md). El [despliegue real](https://github.com/ian0000/proyecto-api-final/actions/runs/40054075901) terminó success; también pasó el [CI completo del helper CORS y la configuración](https://github.com/ian0000/proyecto-api-final/actions/runs/40054219333), con integración Mongo y E2E en el entorno de CI. Esta continuación amplía el límite cloud de la entrega anterior; no completa los pendientes de carga, SLA o recuperación.
 
 El repositorio público es [ian0000/proyecto-api-final](https://github.com/ian0000/proyecto-api-final). La primera ejecución CI y el corte local se conservan en las evidencias de la entrega; la continuación anterior acredita por separado el CD frontend. Quedan pendientes automatización de despliegue backend, separación formal y protecciones de ambientes, mediciones de nube y pruebas de recuperación. El éxito del frontend no acredita esos pendientes.

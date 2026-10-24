@@ -154,10 +154,21 @@ jobs:
             test-results
             artifacts/e2e
           if-no-files-found: warn
+  ops:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci --ignore-scripts
+      - run: bash -n scripts/ubuntu/install-discord-monitor.sh
+      - run: npm run test:ops
   required:
     name: Required checks
     if: always()
-    needs: [changes, docs, backend, frontend, mocks, contract, security, e2e]
+    needs: [changes, docs, backend, frontend, mocks, contract, security, e2e, ops]
     runs-on: ubuntu-latest
     steps:
       - name: Reject any failed or cancelled dependency

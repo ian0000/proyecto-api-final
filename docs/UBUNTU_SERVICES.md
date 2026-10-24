@@ -87,6 +87,8 @@ El contrato usa el servidor relativo `/`, de modo que **Try it out** utiliza el 
 
 ## Estado y siguiente paso
 
+Las [alertas Discord](DISCORD_ALERTS.md) utilizan un timer separado para detectar parada, recuperación y reinicios de estos tres servicios. El instalador del monitor no los detiene ni modifica sus unidades. Requiere configurar el webhook privado y verificar un mensaje real desde EC2; las pruebas locales no acreditan esa activación.
+
 Las unidades se preparan y revisan en el repositorio; su instalación, permanencia al cerrar SSH y recuperación tras reiniciar EC2 requieren evidencia de esa instancia. No se han ejecutado esos pasos desde la computadora de desarrollo.
 
 HTTPS y reverse proxy siguen en [DEPLOYMENT](DEPLOYMENT.md). Mantenga los puertos internos privados. El supervisor no configura DNS, certificados, grupos de seguridad ni el frontend Azure.
